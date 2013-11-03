@@ -24,6 +24,7 @@ public class ObserveReader {
     private int lineIndex = 0;
     private ArrayList<ObserveData> observe = new ArrayList();
     private int observeTypeCount = 0;
+    private String[] typesObservations;
     
     ObserveReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headLines = headLines;
@@ -94,7 +95,7 @@ public class ObserveReader {
         observe.add(new ObserveData(name, data));
     }
     
-    private void addObserves() {
+    private void addObservations() {
         ObserveObject object;
         
         for (Iterator<ObserveData> it = observe.iterator(); it.hasNext();) {
@@ -106,7 +107,7 @@ public class ObserveReader {
                 object = objectList.get(name);
             }
             else {
-                object = new ObserveObject();
+                object = new ObserveObject(name, typesObservations);
                 objectList.put(name, object);
             }
             
@@ -150,7 +151,7 @@ public class ObserveReader {
         }
     }
     
-    private void getObserves() {
+    private void getObservations() {
         int observeLineCount = (observeTypeCount - 1)/5 + 1;
         int indexObserve;
         double value;
@@ -175,6 +176,24 @@ public class ObserveReader {
         }
     }
     
+    private void parseTypesOfObserv(int index, int count) {
+        boolean result = true;
+        int typesLineCount = (count - 1)/9 + 1;
+        int indexType = 0;
+        String line;
+        
+        typesObservations = new String[count + 1];
+        typesObservations[0] = "Time";
+        for (int j = 0; j < typesLineCount; ++j) {
+            line = headLines.get(index + j);
+            for (int i = 0; (i < 9) && (indexType < count); ++i, ++indexType) {
+                int valuePosition = 6 + 6*i + 4;
+                String lineValue = line.substring(valuePosition, valuePosition + 2);
+                typesObservations[indexType + 1] = lineValue;
+            }
+        }
+    }
+    
     private boolean parseHeader() {
         boolean result = true;
         int index;
@@ -186,6 +205,9 @@ public class ObserveReader {
             try {
                 observeTypeCount = Integer.parseInt(line.substring(0, 7).trim());
                 result = (observeTypeCount > 0);
+                if (result) {
+                    parseTypesOfObserv(index, observeTypeCount);
+                }
             } catch (NumberFormatException e) {
                 warning(String.format("NumberFormatException at header line %d", index));
                 warning(line);
@@ -234,8 +256,8 @@ public class ObserveReader {
         if (result) {
             while (linesReady()) {
                 getObservesHeader();
-                getObserves();
-                addObserves();
+                getObservations();
+                addObservations();
             }
             save();
         }
@@ -265,7 +287,7 @@ public class ObserveReader {
         for (Map.Entry<String, ObserveObject> entry : objectList.entrySet()) {
             String string = entry.getKey();
             ObserveObject observeObject = entry.getValue();
-            observeObject.save(string + ".txt");
+            observeObject.save(string + ".txt", true);
         }
     }
 }

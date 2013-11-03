@@ -17,8 +17,15 @@ import java.util.Iterator;
  * @author Ivan
  */
 public class ObserveObject {
+    private String name;
+    private String[] types;
     private ArrayList<Double[]> data = new ArrayList();
 
+    public ObserveObject(String name, String[] types) {
+        this.name = name;
+        this.types = types;
+    }
+    
     /**
      * @return the data
      */
@@ -33,14 +40,26 @@ public class ObserveObject {
         this.data = data;
     }
     
-    public void save(String fileName) {
+    public void save(String fileName, boolean writeHeader) {
+        String line;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
+            
+            if (writeHeader) {
+                line = "";
+                for (int i = 0; i < types.length; i++) {
+                    line += types[i] + " ";
+                }
+                line += "\n";
+                bw.write(line);
+            }
+            
             for (Iterator<Double[]> it = data.iterator(); it.hasNext();) {
                 Double[] doubles = it.next();
-                String line = "";
-                for (int i = 0; i < doubles.length; ++i)
+                line = "";
+                for (int i = 0; i < doubles.length; ++i) {
                     line += String.valueOf(doubles[i]) + " ";
+                }
                 line += "\n";
                 bw.write(line, 0, line.length());
             }
@@ -49,5 +68,19 @@ public class ObserveObject {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the typeObserves
+     */
+    public String[] getTypes() {
+        return types;
     }
 }
