@@ -4,17 +4,15 @@
  */
 package rinex;
 
-import java.util.ArrayList;
-
 /**
  *
  * @author Ivan
  */
-public class ObserveData {
+public class ObserveSample {
     private String name;
     private Double[] data;
 
-    public ObserveData(String name, Double[] data) {
+    public ObserveSample(String name, Double[] data) {
         this.name = name;
         this.data = data;
     }

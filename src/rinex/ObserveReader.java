@@ -22,7 +22,7 @@ public class ObserveReader {
     private Calendar baseDate = new GregorianCalendar();
     private double baseFracSecond = 0;
     private int lineIndex = 0;
-    private ArrayList<ObserveData> observe = new ArrayList();
+    private ArrayList<ObserveSample> observe = new ArrayList();
     private int observeTypeCount = 0;
     private String[] typesObservations;
     
@@ -92,14 +92,14 @@ public class ObserveReader {
     private void newObserve(String name, double time) {
         Double [] data = new Double[observeTypeCount + 1];
         data[0] = time;
-        observe.add(new ObserveData(name, data));
+        observe.add(new ObserveSample(name, data));
     }
     
     private void addObservations() {
         ObserveObject object;
         
-        for (Iterator<ObserveData> it = observe.iterator(); it.hasNext();) {
-            ObserveData observeData = it.next();
+        for (Iterator<ObserveSample> it = observe.iterator(); it.hasNext();) {
+            ObserveSample observeData = it.next();
             String name = observeData.getName();
             Double [] data = observeData.getData();
 
@@ -156,8 +156,8 @@ public class ObserveReader {
         int indexObserve;
         double value;
         
-        for (Iterator<ObserveData> it = observe.iterator(); it.hasNext();) {
-            ObserveData data = it.next();
+        for (Iterator<ObserveSample> it = observe.iterator(); it.hasNext();) {
+            ObserveSample data = it.next();
             indexObserve = 0;
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
