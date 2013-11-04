@@ -61,7 +61,7 @@ public class ObserveObject {
                     line += String.valueOf(doubles[i]) + " ";
                 }
                 line += "\n";
-                bw.write(line, 0, line.length());
+                bw.write(line);
             }
             bw.close();
         } catch (IOException e) {

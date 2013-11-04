@@ -229,10 +229,12 @@ public class ObserveReader {
                     int month = Integer.parseInt(line.substring(6, 12).trim());
                     int day = Integer.parseInt(line.substring(12, 18).trim());
                     int hour = Integer.parseInt(line.substring(18, 24).trim());
+                    //check rinex manual
                     int minute = Integer.parseInt(line.substring(24, 30).trim());
                     baseFracSecond = Double.parseDouble(line.substring(30, 43).trim());
                     int second = (int)baseFracSecond;
                     baseFracSecond -= second;
+                    //check time millis
                     baseDate = new GregorianCalendar(year, month, day, hour, minute, second);
                 }
                 catch (NumberFormatException e) {

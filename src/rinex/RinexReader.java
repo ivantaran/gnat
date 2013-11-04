@@ -27,6 +27,7 @@ public class RinexReader {
     private double [] version_list;
     private char [] type_list;
     private char [] system_list;
+    private char type = ' ';
     private String errorMessasge = "";
     private String warningMessasge = "";
 
@@ -112,15 +113,15 @@ public class RinexReader {
     private boolean checkType(String line) {
         boolean result = false;
         
-        char c = line.charAt(20);
+        type = line.charAt(20);
         for (int i = 0; i < type_list.length; ++i) {
-            result |= (c == type_list[i]);
+            result |= (type == type_list[i]);
         }
         
         
         if (!result) {
             setError(ErrorCodes.Type);
-            warningMessasge = String.format("Rinex Type: %c", c);
+            warningMessasge = String.format("Rinex Type: %c", type);
             printWarning();
         }
         
@@ -225,11 +226,20 @@ public class RinexReader {
             setError(ErrorCodes.Success);
         }
         
+        switchReader();
         
-        ObserveReader or = new ObserveReader(headLines, dataLines);
         return result;
     }
-
+    void switchReader() {
+        switch (type) {
+            case 'O':
+                ObserveReader or = new ObserveReader(headLines, dataLines);
+                break;
+            case 'G':
+                GlonassNavDataReader gnd = new GlonassNavDataReader(headLines, dataLines);
+        }
+    }
+    
     /**
      * @return the Error Messasge
      */

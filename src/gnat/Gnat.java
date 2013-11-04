@@ -21,5 +21,8 @@ public class Gnat {
 //        hr.open("D:/data/msr/MCCK2740.13G");
         hr.open("D:/data/msr/bjfs2770.13o");
         System.out.println(hr.getErrorMessasge());
+        RinexReader ndr = new RinexReader();
+        ndr.open("D:/data/msr/MCCK3070.13G");
+        
     }
 }
