@@ -43,41 +43,42 @@ public final class Blas {
     
     public static void add(double[][] m1, double[][] m2, double[][] mr) {
         int i, j;
-        for (i = 0; i < mr.length; i++)
-            for (j = 0; j < mr[0].length; j++) 
+        for (i = 0; i < m1.length; i++)
+            for (j = 0; j < m1[0].length; j++) 
                 mr[i][j] = m1[i][j] + m2[i][j];
     }
     
     public static void add(double[] v1, double[] v2, double[] vr) {
-        int i, j;
-        for (i = 0; i < vr.length; i++)
+        int i;
+        for (i = 0; i < v1.length; i++)
             vr[i] = v1[i] + v2[i];
     }
     
     public static void sub(double[] v1, double[] v2, double[] vr) {
         int i;
-        for (i = 0; i < vr.length; i++)
+        for (i = 0; i < v1.length; i++)
             vr[i] = v1[i] - v2[i];
     }
     
     public static void mul(double[][] m1, double[][] m2, double[][] mr) {
         int i, j, k;
-        for (j = 0; j < mr[0].length; j++)
-            for (i = 0; i < mr.length; i++) {
+        for (j = 0; j < m2[0].length; j++)
+            for (i = 0; i < m1.length; i++) {
                 mr[i][j] = 0;
-                for (k = 0; k < m2.length; k++) mr[i][j] += m1[i][k] * m2[k][j];
+                for (k = 0; k < m2.length; k++) 
+                    mr[i][j] += m1[i][k] * m2[k][j];
             }
     }
     
     public static void mul(double[] v1, double[] v2, double[] vr) {
         int i;
-        for (i = 0; i < vr.length; i++)
+        for (i = 0; i < v1.length; i++)
             vr[i] = v1[i] * v2[i];
     }
 
     public static void mul(double[] v, double c, double[] vr) {
         int i;
-        for (i = 0; i < vr.length; i++)
+        for (i = 0; i < v.length; i++)
             vr[i] = c * v[i];
     }
 
@@ -88,30 +89,39 @@ public final class Blas {
                 mr[i][j] = m[i][j]*v[i];
     }
     
+    public static void mul(double[][] m, double[] v, double[] vr) {
+        int i, k;
+        for (i = 0; i < m.length; i++) {
+            vr[i] = 0.0;
+            for (k = 0; k < m[0].length; k++) 
+                vr[i] += m[i][k] * v[k];
+        }
+    }
+
     public static void tmul(double[] v, double[][] m, double[][] mr) {
         int i, j;
-        for (i = 0; i < mr[0].length; i++)
-            for (j = 0; j < mr.length; j++) 
+        for (i = 0; i < m[0].length; i++)
+            for (j = 0; j < m.length; j++) 
                 mr[i][j] = m[i][j]*v[j];
     }
     
     public static void sqr(double[] v, double[][] m) {
     int i, j;
-    for (j = 0; j < m[0].length; ++j)
-        for (i = 0; i < m.length; ++i) {
+    for (j = 0; j < v.length; ++j)
+        for (i = 0; i < v.length; ++i) {
             m[i][j] = v[i]*v[j];
         }
     }
 
     public static void sqr(double[][] m, double[][] mr) {
         int i, j, k;
-        double[][] tmp = getMatrix(mr.length, mr.length);
+        double[][] tmp = getMatrix(m.length, m.length);
         
         zero(mr);
 
-        for (j = 0; j < mr[0].length; j++) {
-            for (i = 0; i < mr.length; i++)
-                for (k = 0; k < mr.length; k++) 
+        for (j = 0; j < m[0].length; j++) {
+            for (i = 0; i < m.length; i++)
+                for (k = 0; k < m.length; k++) 
                     tmp[k][i] = m[k][j]*m[i][j];
 
             add(mr, tmp, mr);
@@ -120,14 +130,14 @@ public final class Blas {
     
     public static void abs(double[] v, double[] vr) {
         int i;
-        for (i = 0; i < vr.length; i++)
+        for (i = 0; i < v.length; i++)
             vr[i] = Math.abs(v[i]);
     }
     
     public static void trp(double[][] m, double[][] mr) {
         int i, j;
-        for (j = 0; j < mr[0].length; j++)
-            for (i = 0; i < mr.length; i++) 
+        for (j = 0; j < m[0].length; j++)
+            for (i = 0; i < m.length; i++) 
                 mr[j][i] = m[i][j];
     }
     
@@ -154,8 +164,8 @@ public final class Blas {
 
         zero(mr);
 
-        for (k = 0; k < mr[0].length; k++)
-            for (j = k; j < mr.length; j++) {
+        for (k = 0; k < m[0].length; k++)
+            for (j = k; j < m.length; j++) {
                 tmp = 0.0;
                 for (l = 0; l < k; l++) 
                     tmp += mr[k][l] * mr[j][l];
@@ -181,8 +191,8 @@ public final class Blas {
 
         zero(mr);
 
-        for (k = 0; k < mr[0].length; k++)
-            for (j = k; j < mr.length; j++) {
+        for (k = 0; k < m[0].length; k++)
+            for (j = k; j < m.length; j++) {
                 tmp = 0.0;
                 for (l = 0; l < k; l++) tmp += mr[k][l]*mr[j][l];
                 mr[j][k] = m[j][k] - tmp;
@@ -199,7 +209,7 @@ public final class Blas {
 
     public static boolean hinv(double[][] m, double[][] mr) {
         int i, j, k, l;
-        int h = mr.length;
+        int h = m.length;
         double[][] mh = getMatrix(h, h);
 
         if (!inchol(m, mh)) {
