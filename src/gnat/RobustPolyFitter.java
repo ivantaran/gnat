@@ -12,8 +12,8 @@ public class RobustPolyFitter extends PolyFitter {
     
     private final static int CountOfIterations = 6;
     
-    public RobustPolyFitter(double[] data, int order) {
-        super(data, order);
+    public RobustPolyFitter(double[] data, int order, int index, int length) {
+        super(data, order, index, length);
     }
 
     
@@ -42,23 +42,23 @@ public class RobustPolyFitter extends PolyFitter {
         boolean ok;
         int n = 0;
         double mean;
-        double[] result = new double[data.length];
-        double[][] m   = Blas.getMatrix(data.length, order);
-        double[][] mw  = Blas.getMatrix(order, data.length);
-        double[][] qim = Blas.getMatrix(order, data.length);
+        double[] result = new double[length];
+        double[][] m   = Blas.getMatrix(length, order);
+        double[][] mw  = Blas.getMatrix(order, length);
+        double[][] qim = Blas.getMatrix(order, length);
         double[][] q  = Blas.getMatrix(order, order);
         double[][] qi = Blas.getMatrix(order, order);
-        double[] x = Blas.getVector(data.length);
-        double[] w = Blas.getVector(data.length);
-        double[] r = Blas.getVector(data.length);
+        double[] x = Blas.getVector(length);
+        double[] w = Blas.getVector(length);
+        double[] r = Blas.getVector(length);
 
         Blas.fill(w, 1.0);
         makeScale();
-        fillx(x, scaleMean, scaleStdDev, data.length);
+        fillx(x, scaleMean, scaleStdDev, length);
 
 
         for (int i = 0; i < order; i++)
-            filly(x, mw[i], i, data.length);
+            filly(x, mw[i], i, length);
         
         Blas.trp(mw, m);
 
@@ -69,7 +69,7 @@ public class RobustPolyFitter extends PolyFitter {
 
             if (ok) {
                 Blas.mul(qi, mw, qim);
-                Blas.mul(qim, data, coefficients);
+                Blas.mul(qim, data, getCoefficients());
                 fx(result);
                 Blas.sub(data, result, r);
                 mean = Statistics.mean(r);
