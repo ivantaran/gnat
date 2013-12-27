@@ -82,11 +82,11 @@ public final class Blas {
             vr[i] = c * v[i];
     }
 
-    public static void mul(double[] v, double[][] m, double[][] mr) {
+    public static void mul(double[] column, double[][] m, double[][] mr) {
         int i, j;
-        for (i = 0; i < mr[0].length; i++)
-            for (j = 0; j < mr.length; j++) 
-                mr[i][j] = m[i][j]*v[i];
+        for (i = 0; i < m.length; i++)
+            for (j = 0; j < m[0].length; j++) 
+                mr[i][j] = m[i][j] * column[i];
     }
     
     public static void mul(double[][] m, double[] v, double[] vr) {
@@ -98,12 +98,29 @@ public final class Blas {
         }
     }
 
-    public static void tmul(double[] v, double[][] m, double[][] mr) {
+    public static void mul(double[][] m, double[] v, int iv, int length, double[] vr) {
+        int i, k;
+        for (i = 0; i < length; i++) {
+            vr[i] = 0.0;
+            for (k = 0; k < length; k++) 
+                vr[i] += m[i][k] * v[iv + k];
+        }
+    }
+
+    public static void tmul(double[] row, double[][] m, double[][] mr) {
         int i, j;
         for (i = 0; i < m[0].length; i++)
             for (j = 0; j < m.length; j++) 
-                mr[i][j] = m[i][j]*v[j];
+                mr[i][j] = m[i][j] * row[j];
     }
+
+    public static void ttmul(double[] v, double[][] m, double[][] mr) {
+        int i, j;
+        for (i = 0; i < m.length; i++)
+            for (j = 0; j < m[0].length; j++) 
+                mr[j][i] = m[i][j]*v[i];
+    }
+    
     
     public static void sqr(double[] v, double[][] m) {
     int i, j;

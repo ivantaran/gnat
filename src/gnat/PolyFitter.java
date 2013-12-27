@@ -9,14 +9,18 @@ package gnat;
  * @author Taran
  */
 public class PolyFitter extends Filter{
-    private int order;
-    private double[] coefficients;
-    private double scaleMean = 0;
-    private double scaleStdDev = 1;
+    protected int order;
+    protected int index;
+    protected int length;
+    protected double[] coefficients;
+    protected double scaleMean = 0;
+    protected double scaleStdDev = 1;
 
-    public PolyFitter(double[] data, int order) {
+    public PolyFitter(double[] data, int order, int index, int length) {
         this.data = data;
         this.order = order;
+        this.index = index;
+        this.length = length;
         coefficients = new double[order];
     }
         
@@ -48,23 +52,28 @@ public class PolyFitter extends Filter{
         return result;
     }
 
-    private void fillx(double[] buffer, double mean, double std, int n) {
+    protected void fillx(double[] buffer, double mean, double std, int n) {
         for (int i = 0; i < n; i++)
             buffer[i] = ((double)i - mean) / std;
     }
 
-    private void filly(double[] x, double[] buffer, int degree, int n) {
+    protected void filly(double[] x, double[] buffer, int degree, int n) {
         for (int i = 0; i < n; i++) 
             buffer[i] = Math.pow(x[i], degree);
     }
 
-    private void fx(double[] d) {
+    protected void fx(double[] d) {
         double t;
 
         for (int i = 0; i < d.length; i++) {
             t = (i - scaleMean) / scaleStdDev;
-            d[i] = poly(t, coefficients);
+            d[i] = poly(t, getCoefficients());
         }
+    }
+    
+    protected void makeScale() {
+        scaleMean = makeScaleMean(data.length);
+        scaleStdDev = makeScaleStdDev(scaleMean, data.length);
     }
     
     @Override
@@ -78,9 +87,8 @@ public class PolyFitter extends Filter{
         double[][] qi  =  Blas.getMatrix(order, order);
         double[] x = Blas.getVector(data.length);
         
-        scaleMean = makeScaleMean(data.length);
-        scaleStdDev = makeScaleStdDev(scaleMean, data.length);
-
+        makeScale();
+        
         fillx(x, scaleMean, scaleStdDev, data.length);
 
         for (int i = 0; i < order; i++)
@@ -91,11 +99,32 @@ public class PolyFitter extends Filter{
 
         if (ok) {
             Blas.mul(qi, m, qim);
-            Blas.mul(qim, data, coefficients);
+            Blas.mul(qim, data, getCoefficients());
             fx(result);
         }
 
         return result;
+    }
+
+    /**
+     * @return the index
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * @param index the index to set
+     */
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    /**
+     * @return the coefficients
+     */
+    public double[] getCoefficients() {
+        return coefficients;
     }
     
 }

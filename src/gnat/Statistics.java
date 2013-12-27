@@ -41,7 +41,7 @@ public final class Statistics {
         for (int i = 0; i < x.length; i++) {
             md += Math.abs(x[i] - mean);
         }
-        md /= x.length;
+        md /= (double)x.length;
 
         return md;
     }
