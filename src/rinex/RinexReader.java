@@ -24,6 +24,7 @@ public class RinexReader {
     public static final String MarkerTimeOfFirstObs =  "TIME OF FIRST OBS";
     public static final String MarkerEndOfHeader = "END OF HEADER";
     
+    public GlonassNavDataReader gnd_tmp;
     private double [] version_list;
     private char [] type_list;
     private char [] system_list;
@@ -230,6 +231,7 @@ public class RinexReader {
         
         return result;
     }
+    
     void switchReader() {
         switch (type) {
             case 'O':
@@ -237,6 +239,8 @@ public class RinexReader {
                 break;
             case 'G':
                 GlonassNavDataReader gnd = new GlonassNavDataReader(headLines, dataLines);
+                gnd_tmp = gnd;
+                break;
         }
     }
     

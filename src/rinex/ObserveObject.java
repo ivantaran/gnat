@@ -4,13 +4,10 @@
  */
 package rinex;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  *
@@ -47,15 +44,13 @@ public class ObserveObject {
             
             if (writeHeader) {
                 line = "";
-                for (int i = 0; i < types.length; i++) {
-                    line += types[i] + " ";
+                for (String type : types) {
+                    line += type + " ";
                 }
                 line += "\n";
                 bw.write(line);
             }
-            
-            for (Iterator<Double[]> it = data.iterator(); it.hasNext();) {
-                Double[] doubles = it.next();
+            for (Double[] doubles : data) {
                 line = "";
                 for (int i = 0; i < doubles.length; ++i) {
                     line += String.valueOf(doubles[i]) + " ";

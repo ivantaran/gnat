@@ -16,92 +16,7 @@ public class GiModel {
     public static final double WE   =  7.292115e-5;
     public static final double MUE  =  398600.44e9;
     public static final double CVEL =  299792458.0;
-
-    
-    private static final int InitialLength = 12;
-    private static final int VectorLength = 6;
-    
-    public class GlonassSet implements Cloneable{
-        private double[] initial = new double[InitialLength];
-        private double[] current = new double[VectorLength];
-        private double[] derivatives = new double[VectorLength];
-        private double stepTime = 1.0;
-//        private double *msr_r;
-//        private double len;
-
-        /**
-         * @return the initial
-         */
-        public double[] getInitial() {
-            return initial;
-        }
-
-        /**
-         * @param initial the initial to set
-         */
-        public void setInitial(double[] initial) {
-            this.initial = initial;
-        }
-
-        /**
-         * @return the current
-         */
-        public double[] getCurrent() {
-            return current;
-        }
-
-        /**
-         * @param current the current to set
-         */
-        public void setCurrent(double[] current) {
-            this.current = current;
-        }
-
-        /**
-         * @return the derivatives
-         */
-        public double[] getDerivatives() {
-            return derivatives;
-        }
-
-        /**
-         * @param derivatives the derivatives to set
-         */
-        public void setDerivatives(double[] derivatives) {
-            this.derivatives = derivatives;
-        }
-
-        /**
-         * @return the stepTime
-         */
-        public double getStepTime() {
-            return stepTime;
-        }
-
-        /**
-         * @param stepTime the stepTime to set
-         */
-        public void setStepTime(double stepTime) {
-            this.stepTime = stepTime;
-        }
         
-        @Override
-        public GlonassSet clone() {
-            GlonassSet s;
-            
-            try {
-                s = (GlonassSet)super.clone();
-            } catch (CloneNotSupportedException e) {
-                System.out.println(e.getMessage());
-                s = null;
-            }
-            
-            return s;
-        }
-        
-    };
-    
-    
     private void gimodel(GlonassSet s) {
         double r;
         double a, b, c;
@@ -114,7 +29,7 @@ public class GiModel {
                 data[2] * data[2]
                 );
         
-        if (r == 0.0) {
+        if (r < Double.MIN_VALUE) {
             r = Double.MIN_VALUE;
         }
         
@@ -156,27 +71,27 @@ public class GiModel {
         
         gimodel(k1);
         k2 = k1.clone();
-        for (int i = 0; i < VectorLength; i++) {
+        for (int i = 0; i < GlonassSet.VectorLength; i++) {
             k1.getDerivatives()[i] *= k1.getStepTime();
             k2.getInitial()[i] = 0.5*k1.getDerivatives()[i] + s.getInitial()[i];
         }
 
         gimodel(k2);
         k3 = k2.clone();
-        for (int i = 0; i < VectorLength; ++i) {
+        for (int i = 0; i < GlonassSet.VectorLength; ++i) {
             k2.getDerivatives()[i] *= k2.getStepTime();
             k3.getInitial()[i] = 0.5*k2.getDerivatives()[i] + s.getInitial()[i];
         }
 
         gimodel(k3);
         k4 = k3.clone();
-        for (int i = 0; i < VectorLength; ++i) {
+        for (int i = 0; i < GlonassSet.VectorLength; ++i) {
             k3.getDerivatives()[i] *= k3.getStepTime();
             k4.getInitial()[i] = k3.getDerivatives()[i] + s.getInitial()[i];
         }
 
         gimodel(k4);
-        for (int i = 0; i < VectorLength; ++i) {
+        for (int i = 0; i < GlonassSet.VectorLength; ++i) {
             k4.getDerivatives()[i] *= k4.getStepTime();
             s.getCurrent()[i] = s.getInitial()[i] + 
                 (k1.getDerivatives()[i] + 2.0 * k2.getDerivatives()[i] + 

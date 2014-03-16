@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
 
 /**
@@ -20,12 +21,13 @@ public class GlonassNavDataReader {
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
     private int lineIndex = 0;
-    private ArrayList<GlonassNavData> navDataList = new ArrayList();
+    protected ArrayList<GlonassNavData> navDataList = new ArrayList();
     
     GlonassNavDataReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headLines = headLines;
         this.dataLines = dataLines;
         parse();
+        save();
     }
     
     private GregorianCalendar getTime(String line) {
@@ -43,9 +45,9 @@ public class GlonassNavDataReader {
             c.setTimeInMillis(0);
             c.set(year, month, day, hour, minute, second);
             c.setTimeInMillis(c.getTimeInMillis() + (long)(fracSecond*1000));
-            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
-            sdf.setCalendar(c);
-            warning(sdf.format(c.getTimeInMillis()));
+//            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
+//            sdf.setCalendar(c);
+//            warning(sdf.format(c.getTimeInMillis()));
         }
         catch (NumberFormatException e) {
             warning(String.format("NumberFormatException at header line %d", lineIndex));
@@ -105,6 +107,8 @@ public class GlonassNavDataReader {
         
         gnd.setState(state);
         gnd.setAcceleration(acceleration);
+        
+        navDataList.add(gnd);
     }
     
     private void parse() {
@@ -129,6 +133,19 @@ public class GlonassNavDataReader {
     private void warning(String message) {
         System.out.println(message);
     }
-    
+
+    private void save() {
+        for (GlonassNavData gnd : navDataList) {
+            gnd.save(String.valueOf(gnd.getNumber()) + ".gnd", true);
+        }
+    }
+
+    /**
+     * @return the navDataList
+     */
+    public ArrayList<GlonassNavData> getNavDataList() {
+        return navDataList;
+    }
+
 }
 

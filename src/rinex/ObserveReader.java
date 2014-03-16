@@ -137,7 +137,7 @@ public class ObserveReader {
                 if (objectNamePosition + 1 < line.length()) {
                     String name = line.substring(objectNamePosition, objectNamePosition + 3);
                     newObserve(name, time);
-                    warning(name);
+//                    warning(name);
                 }
                 else {
                     warning(String.format("error at line %d", lineIndex));
