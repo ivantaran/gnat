@@ -16,16 +16,17 @@ public class Gnat {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+
         RinexReader hr = new RinexReader();
-//        hr.open("D:/data/msr/MCCK2740.13G");
-        hr.open("D:/data/msr/d044-002.obs");
+        hr.open("d:\\work\\pc\\bumblebee\\scae177o.16o");
         System.out.println(hr.getErrorMessasge());
-        RinexReader ndr = new RinexReader();
-        ndr.open("D:/data/msr/MCCK3070.13G");
-        System.out.println(ndr.getErrorMessasge());
         
-        CalcObject co = new CalcObject(ndr.gnd_tmp.getNavDataList().get(1));
+        RinexReader ndr = new RinexReader();
+        ndr.open("d:\\work\\pc\\bumblebee\\scae177o.16g");
+        System.out.println(ndr.getErrorMessasge());
+
+        CalcObject co = new CalcObject(ndr.gnd_tmp.getNavDataList().get(0));
         co.save("co.txt");
+        
     }
 }
