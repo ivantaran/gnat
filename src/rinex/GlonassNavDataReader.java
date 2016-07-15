@@ -24,10 +24,13 @@ public class GlonassNavDataReader {
     protected ArrayList<GlonassNavData> navDataList = new ArrayList();
     
     GlonassNavDataReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
+        add(headLines, dataLines);
+    }
+    
+    public final void add(ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headLines = headLines;
         this.dataLines = dataLines;
         parse();
-        save();
     }
     
     private GregorianCalendar getTime(String line) {
@@ -112,6 +115,7 @@ public class GlonassNavDataReader {
     }
     
     private void parse() {
+        lineIndex = 0;
         while (linesReady()) {
             parseNavData();
         }
@@ -134,7 +138,7 @@ public class GlonassNavDataReader {
         System.out.println(message);
     }
 
-    private void save() {
+    public void save() {
         for (GlonassNavData gnd : navDataList) {
             gnd.save(String.valueOf(gnd.getNumber()) + ".gnd", true);
         }

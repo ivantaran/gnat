@@ -27,6 +27,10 @@ public class ObserveReader {
     private String[] typesObservations;
     
     ObserveReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
+        add(headLines, dataLines);
+    }
+    
+    public final void add(ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headLines = headLines;
         this.dataLines = dataLines;
         parse();
@@ -254,6 +258,7 @@ public class ObserveReader {
     }
     
     private void parse() {
+        lineIndex = 0;
         boolean result = parseHeader();
         if (result) {
             while (linesReady()) {
@@ -261,7 +266,6 @@ public class ObserveReader {
                 getObservations();
                 addObservations();
             }
-            save();
         }
         else {
             warning("Bad header");

@@ -25,6 +25,7 @@ public class RinexReader {
     public static final String MarkerEndOfHeader = "END OF HEADER";
     
     public GlonassNavDataReader gnd_tmp;
+    public ObserveReader observeReader;
     private double [] version_list;
     private char [] type_list;
     private char [] system_list;
@@ -56,6 +57,9 @@ public class RinexReader {
         system_list[3] = 'E';
         system_list[4] = 'S';
         system_list[5] = 'M';
+        
+        observeReader = null;
+        gnd_tmp = null;
     }
     
     public static int getMarkerIndex(String marker, ArrayList<String> list) {
@@ -235,11 +239,20 @@ public class RinexReader {
     void switchReader() {
         switch (type) {
             case 'O':
-                ObserveReader or = new ObserveReader(headLines, dataLines);
+                if (observeReader == null) {
+                    observeReader = new ObserveReader(headLines, dataLines);
+                }
+                else {
+                    observeReader.add(headLines, dataLines);
+                }
                 break;
             case 'G':
-                GlonassNavDataReader gnd = new GlonassNavDataReader(headLines, dataLines);
-                gnd_tmp = gnd;
+                if (gnd_tmp == null) {
+                    gnd_tmp = new GlonassNavDataReader(headLines, dataLines);
+                }
+                else {
+                    gnd_tmp.add(headLines, dataLines);
+                }
                 break;
         }
     }

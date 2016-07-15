@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
@@ -30,7 +31,8 @@ public class CalcObject {
     private double endTime   =  900.0;
     private final GregorianCalendar time = new GregorianCalendar();
     private final GiModel model = new GiModel();
-    private final TreeMap<Double, double[]> state = new TreeMap();
+//    private final TreeMap<Double, double[]> state = new TreeMap();
+    private final HashMap<Integer, TreeMap<Double, double[]>> map = new HashMap();
     
     CalcObject() {
 
@@ -97,8 +99,15 @@ public class CalcObject {
         GlonassSet gset = init();
         double t = navData.getTime().getTimeInMillis() / 1000L + startTime;
         
+        TreeMap<Double, double[]> tm = map.get(navData.getNumber());
+        
+        if (tm == null) {
+            tm = new TreeMap();
+            map.put(navData.getNumber(), tm);
+        }
+        
         for (double i = startTime; i < endTime; i += stepTime) {
-            state.put(t, gset.getCurrent().clone());
+            tm.put(t, gset.getCurrent().clone());
             model.step(gset);
             t += stepTime;
         }
@@ -110,18 +119,22 @@ public class CalcObject {
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
-    
-            for (Map.Entry<Double, double[]> entry : state.entrySet()) {
-                double t = entry.getKey();
-                double ds[] = entry.getValue();
-                line = String.valueOf((long)t) + "\t";
-                for (int i = 0; i < ds.length; i++) {
-                    line += String.format(Locale.ROOT, "%.12e\t", ds[i]);
+            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : map.entrySet()) {
+                for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+                    double ds[] = entry.getValue();
+                    
+                    line = String.format("%d\t%d\t", 
+                            tm.getKey(), 
+                            entry.getKey().longValue()
+                    );
+                    
+                    for (int i = 0; i < ds.length; i++) {
+                        line += String.format(Locale.ROOT, "%.12e\t", ds[i]);
+                    }
+                    line += "\n";
+                    bw.write(line);
                 }
-                line += "\n";
-                bw.write(line);
             }
-            
             bw.close();
         } catch (IOException e) {
             System.out.println(e.getMessage());
