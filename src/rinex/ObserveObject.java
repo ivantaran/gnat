@@ -8,6 +8,10 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  *
@@ -16,7 +20,7 @@ import java.util.ArrayList;
 public class ObserveObject {
     private String name;
     private String[] types;
-    private ArrayList<Double[]> data = new ArrayList();
+    private TreeMap<Double, double[]> data = new TreeMap();
 
     public ObserveObject(String name, String[] types) {
         this.name = name;
@@ -26,14 +30,14 @@ public class ObserveObject {
     /**
      * @return the data
      */
-    public ArrayList<Double[]> getData() {
+    public TreeMap<Double, double[]> getData() {
         return data;
     }
 
     /**
      * @param data the data to set
      */
-    public void setData(ArrayList<Double[]> data) {
+    public void setData(TreeMap<Double, double[]> data) {
         this.data = data;
     }
     
@@ -50,10 +54,10 @@ public class ObserveObject {
                 line += "\n";
                 bw.write(line);
             }
-            for (Double[] doubles : data) {
-                line = "";
-                for (int i = 0; i < doubles.length; ++i) {
-                    line += String.valueOf(doubles[i]) + " ";
+            for (Map.Entry<Double, double[]> entry : data.entrySet()) {
+                line = String.format("%d\t", entry.getKey().longValue());
+                for (int i = 0; i < entry.getValue().length; ++i) {
+                    line += String.format(Locale.ROOT, "%.12e\t", entry.getValue()[i]);
                 }
                 line += "\n";
                 bw.write(line);

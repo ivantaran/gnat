@@ -10,10 +10,12 @@ package rinex;
  */
 public class ObserveSample {
     private String name;
-    private Double[] data;
+    private double[] data;
+    private double time;
 
-    public ObserveSample(String name, Double[] data) {
+    public ObserveSample(String name, double time, double[] data) {
         this.name = name;
+        this.time = time;
         this.data = data;
     }
 
@@ -35,14 +37,28 @@ public class ObserveSample {
     /**
      * @return the data
      */
-    public Double[] getData() {
+    public double[] getData() {
         return data;
     }
 
     /**
      * @param data the data to set
      */
-    public void setData(Double[] data) {
+    public void setData(double[] data) {
         this.data = data;
+    }
+
+    /**
+     * @return the time
+     */
+    public double getTime() {
+        return time;
+    }
+
+    /**
+     * @param time the time to set
+     */
+    public void setTime(double time) {
+        this.time = time;
     }
 }

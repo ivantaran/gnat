@@ -51,8 +51,9 @@ public class ObserveReader {
                 int second = (int)fsecond;
                 fsecond -= second;
                 Calendar date = new GregorianCalendar(year, month, day, hour, minute, second);
-                result = date.getTimeInMillis()/1000 - baseDate.getTimeInMillis()/1000 + 
-                fsecond - baseFracSecond;
+                result = date.getTimeInMillis() / 1000L + fsecond;
+//                result = date.getTimeInMillis() / 1000 - baseDate.getTimeInMillis() / 1000 + 
+//                fsecond - baseFracSecond;
             }
             catch (NumberFormatException e) {
                 warning(String.format("NumberFormatException at line %d", lineIndex));
@@ -94,18 +95,15 @@ public class ObserveReader {
     }
     
     private void newObserve(String name, double time) {
-        Double [] data = new Double[observeTypeCount + 1];
-        data[0] = time;
-        observe.add(new ObserveSample(name, data));
+        double data[] = new double[observeTypeCount];
+        observe.add(new ObserveSample(name, time, data));
     }
     
     private void addObservations() {
         ObserveObject object;
         
-        for (Iterator<ObserveSample> it = observe.iterator(); it.hasNext();) {
-            ObserveSample observeData = it.next();
+        for (ObserveSample observeData : observe) {
             String name = observeData.getName();
-            Double [] data = observeData.getData();
 
             if (objectList.containsKey(name)) {
                 object = objectList.get(name);
@@ -115,7 +113,7 @@ public class ObserveReader {
                 objectList.put(name, object);
             }
             
-            object.getData().add(data);
+            object.getData().put(observeData.getTime(), observeData.getData());
         }
         
     }
@@ -160,8 +158,7 @@ public class ObserveReader {
         int indexObserve;
         double value;
         
-        for (Iterator<ObserveSample> it = observe.iterator(); it.hasNext();) {
-            ObserveSample data = it.next();
+        for (ObserveSample data : observe) {
             indexObserve = 0;
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
@@ -174,7 +171,7 @@ public class ObserveReader {
                     else {
                         value = 0;
                     }
-                    data.getData()[indexObserve + 1] = value;
+                    data.getData()[indexObserve] = value;
                 }
             }
         }
@@ -191,7 +188,7 @@ public class ObserveReader {
         for (int j = 0; j < typesLineCount; ++j) {
             line = headLines.get(index + j);
             for (int i = 0; (i < 9) && (indexType < count); ++i, ++indexType) {
-                int valuePosition = 6 + 6*i + 4;
+                int valuePosition = 6 + 6 * i + 4;
                 String lineValue = line.substring(valuePosition, valuePosition + 2);
                 typesObservations[indexType + 1] = lineValue;
             }
