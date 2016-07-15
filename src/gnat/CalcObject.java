@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import rinex.GlonassNavData;
 
 /**
@@ -28,7 +29,7 @@ public class CalcObject {
     private double endTime   =  900.0;
     private GregorianCalendar time = new GregorianCalendar();
     private GiModel model = new GiModel();
-    private ArrayList<double[]> state = new ArrayList();
+    private HashMap<Double, double[]> state = new HashMap();
     
     CalcObject(GlonassNavData navData) {
         this.navData = navData;
@@ -78,10 +79,12 @@ public class CalcObject {
     
     private void calculate() {
         GlonassSet gset = init();
+        double t = navData.getTime().getTimeInMillis() / 1000L - startTime;
         
         for (double i = startTime; i < endTime; i += stepTime) {
             model.step(gset);
-            state.add(gset.getCurrent().clone());
+            state.put(t, gset.getCurrent().clone());
+            t += stepTime;
         }
         
     }
@@ -92,10 +95,12 @@ public class CalcObject {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
     
-            for (double[] ds : state) {
-                line = "";
+            for (HashMap.Entry<Double, double[]> entry : state.entrySet()) {
+                double t = entry.getKey();
+                double ds[] = entry.getValue();
+                line = String.valueOf(t) + "\t";
                 for (int i = 0; i < ds.length; i++) {
-                    line += String.valueOf(ds[i]) + " ";
+                    line += String.valueOf(ds[i]) + "\t";
                 }
                 line += "\n";
                 bw.write(line);
