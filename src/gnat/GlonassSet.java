@@ -84,6 +84,9 @@ public class GlonassSet implements Cloneable{
 
         try {
             s = (GlonassSet)super.clone();
+            s.setInitial(initial.clone());
+            s.setCurrent(current.clone());
+            s.setDerivatives(derivatives.clone());
         } catch (CloneNotSupportedException e) {
             System.out.println(e.getMessage());
             s = null;

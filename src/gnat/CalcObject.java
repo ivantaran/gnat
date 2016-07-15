@@ -9,9 +9,8 @@ package gnat;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import rinex.GlonassNavData;
@@ -24,16 +23,25 @@ public class CalcObject {
     private final static int MaximumPoints = 0x7FFFFFFF;
     private final static int StateWidth = 7;
     
-    private String name = "default";
-    private GlonassNavData navData;
+    private final String name = "default";
+    private GlonassNavData navData = null;
     private double stepTime  =    1.0;
-    private double startTime = -899.0;
+    private double startTime = -900.0;
     private double endTime   =  900.0;
-    private GregorianCalendar time = new GregorianCalendar();
-    private GiModel model = new GiModel();
-    private TreeMap<Double, double[]> state = new TreeMap();
+    private final GregorianCalendar time = new GregorianCalendar();
+    private final GiModel model = new GiModel();
+    private final TreeMap<Double, double[]> state = new TreeMap();
+    
+    CalcObject() {
+
+    }
     
     CalcObject(GlonassNavData navData) {
+        this.navData = navData;
+        calculate();
+    }
+    
+    public void add(GlonassNavData navData) {
         this.navData = navData;
         calculate();
     }
@@ -60,12 +68,13 @@ public class CalcObject {
         System.arraycopy(navData.getAcceleration(), 0, initial, navData.getState().length, navData.getAcceleration().length);
         
         gset.setInitial(initial);
+        gset.setCurrent(initial.clone());
         
         if (startTime < 0) {
             gset.setStepTime(-stepTime);
         }
         else {
-            gset.setStepTime(stepTime);
+            gset.setStepTime( stepTime);
         }
         
         startTimeAbs = Math.abs(startTime);
@@ -80,12 +89,17 @@ public class CalcObject {
     }
     
     private void calculate() {
+        
+        if (navData == null) {
+            return;
+        }
+        
         GlonassSet gset = init();
-        double t = navData.getTime().getTimeInMillis() / 1000L - startTime;
+        double t = navData.getTime().getTimeInMillis() / 1000L + startTime;
         
         for (double i = startTime; i < endTime; i += stepTime) {
-            model.step(gset);
             state.put(t, gset.getCurrent().clone());
+            model.step(gset);
             t += stepTime;
         }
         
@@ -102,7 +116,7 @@ public class CalcObject {
                 double ds[] = entry.getValue();
                 line = String.valueOf((long)t) + "\t";
                 for (int i = 0; i < ds.length; i++) {
-                    line += String.format("%.12e\t", ds[i]);
+                    line += String.format(Locale.ROOT, "%.12e\t", ds[i]);
                 }
                 line += "\n";
                 bw.write(line);

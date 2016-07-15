@@ -4,6 +4,8 @@
  */
 package gnat;
 
+import java.util.ArrayList;
+import rinex.GlonassNavData;
 import rinex.RinexReader;
 
 /**
@@ -25,7 +27,12 @@ public class Gnat {
         ndr.open("d:\\tmp\\5\\data\\16196\\L1\\nav\\scae1960cd.16g");
         System.out.println(ndr.getErrorMessasge());
 
-        CalcObject co = new CalcObject(ndr.gnd_tmp.getNavDataList().get(0));
+        CalcObject co = new CalcObject();
+        
+        for (GlonassNavData nd : ndr.gnd_tmp.getNavDataList()) {
+            co.add(nd);
+        }
+        
         co.save("co.txt");
         
     }

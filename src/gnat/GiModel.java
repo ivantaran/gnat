@@ -43,21 +43,21 @@ public class GiModel {
         
         s.getDerivatives()[3] = 
                 a * data[0] + 
-                b * data[0] * (1 - c) + 
+                b * data[0] * (1.0 - c) + 
                 WE * WE * data[0] + 
-                2 * WE * data[4] + 
+                2.0 * WE * data[4] + 
                 data[6];
 
         s.getDerivatives()[4] = 
                 a * data[1] + 
-                b * data[1] * (1 - c) + 
+                b * data[1] * (1.0 - c) + 
                 WE * WE * data[1] - 
-                2 * WE * data[3] + 
+                2.0 * WE * data[3] + 
                 data[7];
 
         s.getDerivatives()[5] = 
                 a * data[2] + 
-                b * data[2] * (3 - c) + 
+                b * data[2] * (3.0 - c) + 
                 data[8];
     }
     
@@ -73,14 +73,14 @@ public class GiModel {
         k2 = k1.clone();
         for (int i = 0; i < GlonassSet.VectorLength; i++) {
             k1.getDerivatives()[i] *= k1.getStepTime();
-            k2.getInitial()[i] = 0.5*k1.getDerivatives()[i] + s.getInitial()[i];
+            k2.getInitial()[i] = 0.5 * k1.getDerivatives()[i] + s.getInitial()[i];
         }
 
         gimodel(k2);
         k3 = k2.clone();
         for (int i = 0; i < GlonassSet.VectorLength; ++i) {
             k2.getDerivatives()[i] *= k2.getStepTime();
-            k3.getInitial()[i] = 0.5*k2.getDerivatives()[i] + s.getInitial()[i];
+            k3.getInitial()[i] = 0.5 * k2.getDerivatives()[i] + s.getInitial()[i];
         }
 
         gimodel(k3);
@@ -96,6 +96,7 @@ public class GiModel {
             s.getCurrent()[i] = s.getInitial()[i] + 
                 (k1.getDerivatives()[i] + 2.0 * k2.getDerivatives()[i] + 
                  2.0 * k3.getDerivatives()[i] + k4.getDerivatives()[i]) / 6.0;
+            s.getInitial()[i] = s.getCurrent()[i];
         }
     }
     
