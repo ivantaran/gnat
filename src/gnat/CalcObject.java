@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import rinex.GlonassNavData;
 
 /**
@@ -29,7 +31,7 @@ public class CalcObject {
     private double endTime   =  900.0;
     private GregorianCalendar time = new GregorianCalendar();
     private GiModel model = new GiModel();
-    private HashMap<Double, double[]> state = new HashMap();
+    private TreeMap<Double, double[]> state = new TreeMap();
     
     CalcObject(GlonassNavData navData) {
         this.navData = navData;
@@ -95,12 +97,12 @@ public class CalcObject {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
     
-            for (HashMap.Entry<Double, double[]> entry : state.entrySet()) {
+            for (Map.Entry<Double, double[]> entry : state.entrySet()) {
                 double t = entry.getKey();
                 double ds[] = entry.getValue();
-                line = String.valueOf(t) + "\t";
+                line = String.valueOf((long)t) + "\t";
                 for (int i = 0; i < ds.length; i++) {
-                    line += String.valueOf(ds[i]) + "\t";
+                    line += String.format("%.12e\t", ds[i]);
                 }
                 line += "\n";
                 bw.write(line);
