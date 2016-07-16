@@ -14,6 +14,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import rinex.GlonassNavData;
+import rinex.ObserveObject;
 
 /**
  *
@@ -30,6 +31,7 @@ public class CalcObject {
     private final GiModel model = new GiModel();
     private final double position[];// = new double[6];
     private final HashMap<Integer, TreeMap<Double, double[]>> map = new HashMap();
+    private final HashMap<Integer, TreeMap<Double, Double>> delta = new HashMap();
     
     CalcObject() {
         //55.753649, 37.754987
@@ -161,4 +163,46 @@ public class CalcObject {
         
     }
     
+    public void setObserves(HashMap<String, ObserveObject> observes) {
+        for (HashMap.Entry<String, ObserveObject> entry : observes.entrySet()) {
+            int key = Integer.parseInt(entry.getKey().replaceAll("^\\D", ""));
+            TreeMap<Double, double[]> a = entry.getValue().getData();
+            TreeMap<Double, double[]> b = map.get(key);
+            if (a != null && b != null) {
+                TreeMap<Double, Double> d = delta.get(key);
+                if (d == null) {
+                    d = new TreeMap();
+                    delta.put(key, d);
+                }
+                for (Map.Entry<Double, double[]> ea : a.entrySet()) {
+                    double bv[] = b.get(ea.getKey());
+                    if (bv != null && ea.getValue()[2] != 0.0) {
+                        d.put(ea.getKey(), bv[GlonassSet.VectorLength] - ea.getValue()[2]);
+                    }
+                }
+            }
+        }
+    }
+    
+    public void saveDelta(String fileName) {
+        String line;
+
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
+            for (HashMap.Entry<Integer, TreeMap<Double, Double>> tm : delta.entrySet()) {
+                for (Map.Entry<Double, Double> entry : tm.getValue().entrySet()) {
+                    
+                    line = String.format(Locale.ROOT, "%d\t%d\t%.12e\n", 
+                            tm.getKey(), 
+                            entry.getKey().longValue(), 
+                            entry.getValue()
+                    );
+                    bw.write(line);
+                }
+            }
+            bw.close();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }

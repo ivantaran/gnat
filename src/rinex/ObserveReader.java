@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -18,11 +17,11 @@ import java.util.Map;
 public class ObserveReader {
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
-    private HashMap<String, ObserveObject> objectList = new HashMap();
+    private final HashMap<String, ObserveObject> objectList = new HashMap();
     private Calendar baseDate = new GregorianCalendar();
     private double baseFracSecond = 0;
     private int lineIndex = 0;
-    private ArrayList<ObserveSample> observe = new ArrayList();
+    private final ArrayList<ObserveSample> observe = new ArrayList();
     private int observeTypeCount = 0;
     private String[] typesObservations;
     
@@ -105,12 +104,12 @@ public class ObserveReader {
         for (ObserveSample observeData : observe) {
             String name = observeData.getName();
 
-            if (objectList.containsKey(name)) {
-                object = objectList.get(name);
+            if (getObjectList().containsKey(name)) {
+                object = getObjectList().get(name);
             }
             else {
                 object = new ObserveObject(name, typesObservations);
-                objectList.put(name, object);
+                getObjectList().put(name, object);
             }
             
             object.getData().put(observeData.getTime(), observeData.getData());
@@ -287,10 +286,17 @@ public class ObserveReader {
     }
     
     public void save() {
-        for (Map.Entry<String, ObserveObject> entry : objectList.entrySet()) {
+        for (Map.Entry<String, ObserveObject> entry : getObjectList().entrySet()) {
             String string = entry.getKey();
             ObserveObject observeObject = entry.getValue();
             observeObject.save(string + ".txt", true);
         }
+    }
+
+    /**
+     * @return the objectList
+     */
+    public HashMap<String, ObserveObject> getObjectList() {
+        return objectList;
     }
 }

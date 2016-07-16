@@ -55,6 +55,7 @@ public class Gnat {
         }
         
         co.save("co.txt");
-        
+        co.setObserves(hr.observeReader.getObjectList());
+        co.saveDelta("delta.txt");
     }
 }
