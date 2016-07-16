@@ -9,7 +9,6 @@ package gnat;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -24,22 +23,26 @@ public class CalcObject {
     private final static int MaximumPoints = 0x7FFFFFFF;
     private final static int StateWidth = 7;
     
-    private final String name = "default";
     private GlonassNavData navData = null;
     private double stepTime  =    1.0;
     private double startTime = -900.0;
     private double endTime   =  900.0;
-    private final GregorianCalendar time = new GregorianCalendar();
     private final GiModel model = new GiModel();
-//    private final TreeMap<Double, double[]> state = new TreeMap();
+    private final double position[];// = new double[6];
     private final HashMap<Integer, TreeMap<Double, double[]>> map = new HashMap();
     
     CalcObject() {
-
+        //55.753649, 37.754987
+        position = new double[] {
+            2844410.44715917, 
+            2202773.90845159, 
+            5249162.97072981, 
+            0, 0, 0
+        };
     }
     
     CalcObject(GlonassNavData navData) {
-        this.navData = navData;
+        this();
         calculate();
     }
     
@@ -107,11 +110,27 @@ public class CalcObject {
         }
         
         for (double i = startTime; i < endTime; i += stepTime) {
-            tm.put(t, gset.getCurrent().clone());
+            tm.put(t, getMeasureArray(gset.getCurrent()));
             model.step(gset);
             t += stepTime;
         }
         
+    }
+    
+    private double[] getMeasureArray(double[] coords) {
+        double result[] = new double[GlonassSet.VectorLength + 1];
+        double d[] = new double[3];
+
+        System.arraycopy(coords, 0, result, 0, GlonassSet.VectorLength);
+
+        d[0] = coords[0] - position[0];
+        d[1] = coords[1] - position[1];
+        d[2] = coords[2] - position[2];
+
+        result[GlonassSet.VectorLength] = 
+                Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+        
+        return result;
     }
     
     public void save(String fileName) {
