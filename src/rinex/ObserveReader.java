@@ -15,6 +15,7 @@ import java.util.Map;
  * @author Ivan
  */
 public class ObserveReader {
+    public static final int FlagOk = 0;
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
     private final HashMap<String, ObserveObject> objectList = new HashMap();
@@ -131,24 +132,29 @@ public class ObserveReader {
         flag = getFlag(line);
         count = getObjectCount(line);
         objectLineCount = (count - 1)/12 + 1;
-
-        for (int j = 0; j < objectLineCount; ++j) {
-            for (int i = 0; (i < 12) && (indexObject < count); ++i, ++indexObject) {
-                int objectNamePosition = 32 + i*3;
-                if (objectNamePosition + 1 < line.length()) {
-                    String name = line.substring(objectNamePosition, objectNamePosition + 3);
-                    newObserve(name, time);
-//                    warning(name);
+        
+        if (flag == FlagOk) {
+            for (int j = 0; j < objectLineCount; ++j) {
+                for (int i = 0; (i < 12) && (indexObject < count); ++i, ++indexObject) {
+                    int objectNamePosition = 32 + i*3;
+                    if (objectNamePosition + 1 < line.length()) {
+                        String name = line.substring(objectNamePosition, objectNamePosition + 3);
+                        newObserve(name, time);
+    //                    warning(name);
+                    }
+                    else {
+                        warning(String.format("error at line %d", lineIndex));
+                        warning(line);
+                        System.exit(-1);
+                    }
                 }
-                else {
-                    warning(String.format("error at line %d", lineIndex));
-                    warning(line);
-                    System.exit(-1);
+                if (j < objectLineCount - 1) {
+                    line = getLine();
                 }
             }
-            if (j < objectLineCount - 1) {
-                line = getLine();
-            }
+        }
+        else {
+            //TODO write all flags
         }
     }
     

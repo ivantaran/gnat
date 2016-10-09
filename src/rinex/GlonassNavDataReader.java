@@ -47,7 +47,7 @@ public class GlonassNavDataReader {
             fracSecond -= second;
             c.setTimeInMillis(0);
             c.set(year, month, day, hour, minute, second);
-            c.setTimeInMillis(c.getTimeInMillis() + (long)(fracSecond*1000));
+            c.setTimeInMillis(c.getTimeInMillis() + (long)(fracSecond * 1000));
 //            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
 //            sdf.setCalendar(c);
 //            warning(sdf.format(c.getTimeInMillis()));
@@ -69,6 +69,7 @@ public class GlonassNavDataReader {
         
         /* line 1 */
         line = getLine();
+        line = line.replace('D', 'E');
         String ss = line.substring(0, 2);
         gnd.setNumber(Integer.parseInt(line.substring(0, 2).trim()));
         gnd.setTime(getTime(line.substring(3, line.length())));
@@ -78,6 +79,7 @@ public class GlonassNavDataReader {
         
         /* line 2 */
         line = getLine();
+        line = line.replace('D', 'E');
         state[0] = Double.parseDouble(line.substring(3, 22).trim());
         state[3] = Double.parseDouble(line.substring(22, 41).trim());
         acceleration[0] = Double.parseDouble(line.substring(41, 60).trim());
@@ -86,6 +88,7 @@ public class GlonassNavDataReader {
         
         /* line 3 */
         line = getLine();
+        line = line.replace('D', 'E');
         state[1] = Double.parseDouble(line.substring(3, 22).trim());
         state[4] = Double.parseDouble(line.substring(22, 41).trim());
         acceleration[1] = Double.parseDouble(line.substring(41, 60).trim());
@@ -94,6 +97,7 @@ public class GlonassNavDataReader {
         
         /* line 4 */
         line = getLine();
+        line = line.replace('D', 'E');
         state[2] = Double.parseDouble(line.substring(3, 22).trim());
         state[5] = Double.parseDouble(line.substring(22, 41).trim());
         acceleration[2] = Double.parseDouble(line.substring(41, 60).trim());

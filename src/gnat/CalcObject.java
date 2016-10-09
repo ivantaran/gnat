@@ -36,9 +36,15 @@ public class CalcObject {
     CalcObject() {
         //55.753649, 37.754987
         position = new double[] {
-            2844410.44715917, 
-            2202773.90845159, 
-            5249162.97072981, 
+//            2844410.44715917, 
+//            2202773.90845159, 
+//            5249162.97072981,
+//            -5125976.8065,
+//             2688801.6022,
+//            -2669891.5334,
+            -5125912.0, 
+             2688768.0, 
+            -2669858.0, 
             0, 0, 0
         };
     }
@@ -131,6 +137,8 @@ public class CalcObject {
 
         result[GlonassSet.VectorLength] = 
                 Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+        //TODO make cvel const
+        result[GlonassSet.VectorLength] -= navData.getTimeOffset() * 299792458.0;
         
         return result;
     }
@@ -165,6 +173,9 @@ public class CalcObject {
     
     public void setObserves(HashMap<String, ObserveObject> observes) {
         for (HashMap.Entry<String, ObserveObject> entry : observes.entrySet()) {
+            if (entry.getKey().charAt(0) != 'R') {
+                continue;
+            }
             int key = Integer.parseInt(entry.getKey().replaceAll("^\\D", ""));
             TreeMap<Double, double[]> a = entry.getValue().getData();
             TreeMap<Double, double[]> b = map.get(key);

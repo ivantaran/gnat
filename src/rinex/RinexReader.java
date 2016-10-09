@@ -23,6 +23,7 @@ public class RinexReader {
     public static final String MarkerTypesOfObserv = "# / TYPES OF OBSERV";
     public static final String MarkerTimeOfFirstObs =  "TIME OF FIRST OBS";
     public static final String MarkerEndOfHeader = "END OF HEADER";
+    public static final String MarkerComment = "COMMENT";
     
     public GlonassNavDataReader gnd_tmp;
     public ObserveReader observeReader;
@@ -211,7 +212,10 @@ public class RinexReader {
                 while (br.ready()) {
                     line = br.readLine();
                     lineIndex++;
-                    dataLines.add(line);
+                    //TODO MarkerComment to dataLines 
+                    if (line.indexOf(MarkerComment, MarkerLineIndex) < 0) {
+                        dataLines.add(line);
+                    }
                 }
                 
             } else {
