@@ -25,6 +25,7 @@ public class ObserveReader {
     private final ArrayList<ObserveSample> observe = new ArrayList();
     private int observeTypeCount = 0;
     private String[] typesObservations;
+    private int leapSeconds = 0;
     
     ObserveReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
         add(headLines, dataLines);
@@ -51,7 +52,7 @@ public class ObserveReader {
                 int second = (int)fsecond;
                 fsecond -= second;
                 Calendar date = new GregorianCalendar(year, month, day, hour, minute, second);
-                result = date.getTimeInMillis() / 1000L + fsecond;
+                result = date.getTimeInMillis() / 1000L + fsecond - (double)leapSeconds;
 //                result = date.getTimeInMillis() / 1000 - baseDate.getTimeInMillis() / 1000 + 
 //                fsecond - baseFracSecond;
             }
@@ -118,7 +119,7 @@ public class ObserveReader {
         
     }
     
-    private void getObservesHeader() {
+    private void readObservesHeader() {
         double time = 0;
         int flag = 0;
         int count = 0;
@@ -158,7 +159,7 @@ public class ObserveReader {
         }
     }
     
-    private void getObservations() {
+    private void readObservations() {
         int observeLineCount = (observeTypeCount - 1)/5 + 1;
         int indexObserve;
         double value;
@@ -168,7 +169,7 @@ public class ObserveReader {
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
                 for (int i = 0; (i < 5) && (indexObserve < observeTypeCount); ++i, ++indexObserve) {
-                    int valuePosition = 16*i;
+                    int valuePosition = 16 * i;
                     if (valuePosition + 12 < line.length()) {
                         String lineValue = line.substring(valuePosition, valuePosition + 14).trim();
                         value = (lineValue.isEmpty()) ? 0 : Double.valueOf(lineValue);
@@ -254,6 +255,23 @@ public class ObserveReader {
                 warning("MarkerTimeOfFirstObs not found");
                 result = false;
             }
+            
+            index = RinexReader.getMarkerIndex(RinexReader.MarkerLeapSeconds, headLines);
+            if (index > -1) {
+                line = headLines.get(index);
+                try {
+                    leapSeconds = Integer.parseInt(line.substring(0, 6).trim());
+                }
+                catch (NumberFormatException e) {
+                    warning(String.format("NumberFormatException at header line %d", index));
+                    warning(line);
+                    warning(e.getMessage());
+                    result = false;
+                }
+            }
+            else {
+                leapSeconds = 0;
+            }
         }
         
         return result;
@@ -264,8 +282,8 @@ public class ObserveReader {
         boolean result = parseHeader();
         if (result) {
             while (linesReady()) {
-                getObservesHeader();
-                getObservations();
+                readObservesHeader();
+                readObservations();
                 addObservations();
             }
         }

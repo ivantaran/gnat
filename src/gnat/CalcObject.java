@@ -42,9 +42,12 @@ public class CalcObject {
 //            -5125976.8065,
 //             2688801.6022,
 //            -2669891.5334,
-            -5125912.0, 
-             2688768.0, 
-            -2669858.0, 
+//            -5125912.0, 
+//             2688768.0, 
+//            -2669858.0, 
+            -5125977.0,
+             2688802.0,
+            -2669892.0,
             0, 0, 0
         };
     }
@@ -95,7 +98,7 @@ public class CalcObject {
         for (double i = 0; i < startTimeAbs; i += stepTime) {
             model.step(gset);
         }
-        
+                
         gset.setStepTime(stepTime);
         
         return gset;
@@ -137,7 +140,7 @@ public class CalcObject {
 
         result[GlonassSet.VectorLength] = 
                 Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
-        //TODO make cvel const
+        //TODO make cvel as const
         result[GlonassSet.VectorLength] -= navData.getTimeOffset() * 299792458.0;
         
         return result;

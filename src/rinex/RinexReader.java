@@ -24,6 +24,7 @@ public class RinexReader {
     public static final String MarkerTimeOfFirstObs =  "TIME OF FIRST OBS";
     public static final String MarkerEndOfHeader = "END OF HEADER";
     public static final String MarkerComment = "COMMENT";
+    public static final String MarkerLeapSeconds =  "LEAP SECONDS";
     
     public GlonassNavDataReader gnd_tmp;
     public ObserveReader observeReader;
