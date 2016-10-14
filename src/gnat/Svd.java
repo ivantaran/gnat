@@ -458,9 +458,9 @@ public final class Svd {
         double eps = 1e-15;
         double sinmax = 0;
         double sinmin, g, den1, den2;
-        double lam2 = lam*lam;
-        double lamp = lam*0.1;
-        double lamp2 = lamp*lamp;
+        double lam2 = lam * lam;
+        double lamp = lam * 0.1;
+        double lamp2 = lamp * lamp;
 
         double[] p1 = Blas.getVector(w);
         double[] p2 = Blas.getVector(w);
@@ -471,7 +471,7 @@ public final class Svd {
         for (i = 0; i < w; ++i)
             sinmax = Math.max(sinmax, d[i]);
 
-        sinmin = sinmax*frac;
+        sinmin = sinmax * frac;
 
         kk = w;
         for (i = 0; i < w; ++i) 

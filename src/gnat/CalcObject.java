@@ -39,16 +39,20 @@ public class CalcObject {
 //            2844410.44715917, 
 //            2202773.90845159, 
 //            5249162.97072981,
-//            -5125976.8065,
-//             2688801.6022,
-//            -2669891.5334,
+
+            -5125976.8065,
+             2688801.6022,
+            -2669891.5334,
+
 //            -5125912.0, 
 //             2688768.0, 
 //            -2669858.0, 
-            -5125977.0,
-             2688802.0,
-            -2669892.0,
-            0, 0, 0
+            
+//            -5125977.0,
+//             2688802.0,
+//            -2669892.0,
+            0.0, 0.0, 0.0, 
+            0.0
         };
     }
     
@@ -217,6 +221,30 @@ public class CalcObject {
             bw.close();
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        }
+    }
+    
+    public int getLength() {
+        return delta.size();
+    }
+    
+    public double sse() {
+        double result = 0.0;
+        double value;
+        
+        for (HashMap.Entry<Integer, TreeMap<Double, Double>> tm : delta.entrySet()) {
+            for (Map.Entry<Double, Double> entry : tm.getValue().entrySet()) {
+                value = entry.getValue();
+                result += value * value;
+            }
+        }
+        
+        return result;
+    }
+    
+    public void jacobian(double jac[][]) {
+        for (int i = 0; i < jac[0].length; ++i) {
+            jac[0][i] = position[0] - 
         }
     }
 }

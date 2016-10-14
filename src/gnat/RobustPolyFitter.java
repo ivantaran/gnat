@@ -10,7 +10,7 @@ package gnat;
  */
 public class RobustPolyFitter extends PolyFitter {
     
-    private final static int CountOfIterations = 6;
+    private final static int COUNT_OF_ITERATIONS = 6;
     
     public RobustPolyFitter(double[] data, int order, int index, int length) {
         super(data, order, index, length);
@@ -62,7 +62,7 @@ public class RobustPolyFitter extends PolyFitter {
         
         Blas.trp(mw, m);
 
-        for (int j = 0; j < CountOfIterations; j++) {
+        for (int j = 0; j < COUNT_OF_ITERATIONS; j++) {
             Blas.ttmul(w, m, mw);
             Blas.mul(mw, m, q);
             ok = Blas.hinv(q, qi);

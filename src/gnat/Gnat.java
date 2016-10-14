@@ -5,9 +5,6 @@
 package gnat;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import rinex.GlonassNavData;
 import rinex.RinexReader;
 
@@ -33,7 +30,7 @@ public class Gnat {
         }
         
         if (hr.observeReader != null) {
-            hr.observeReader.save();
+//            hr.observeReader.save();
         }
         
         RinexReader ndr = new RinexReader();
@@ -46,7 +43,7 @@ public class Gnat {
             }
         }
     
-        ndr.gnd_tmp.save();
+//        ndr.gnd_tmp.save();
         
         CalcObject co = new CalcObject();
         
@@ -54,8 +51,10 @@ public class Gnat {
             co.add(nd);
         }
         
-        co.save("co.txt");
+//        co.save("co.txt");
         co.setObserves(hr.observeReader.getObjectList());
-        co.saveDelta("delta.txt");
+//        co.saveDelta("delta.txt");
+        MarquardtMin mm = new MarquardtMin();
+        mm.exec(co);
     }
 }
