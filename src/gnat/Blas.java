@@ -7,6 +7,7 @@ package gnat;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  *
@@ -269,7 +270,7 @@ public final class Blas {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
             
             for (int i = 0; i < v.length; i++) {
-                line = String.format("%12.12lf\n", v[i]);
+                line = String.format(Locale.ROOT, "%12.12f\n", v[i]);
                 bw.write(line, 0, line.length());
             }
             
@@ -285,9 +286,9 @@ public final class Blas {
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
             
-            for (int i = 0; i < m.length; i++) {
+            for (double[] m1 : m) {
                 for (int j = 0; j < m[0].length; j++) {
-                    line = String.format("%12.12lf ", m[i][j]);
+                    line = String.format(Locale.ROOT, "%12.12f ", m1[j]);
                     bw.write(line);
                 }
                 bw.write("\n");

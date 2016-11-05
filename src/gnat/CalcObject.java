@@ -21,8 +21,14 @@ import rinex.ObserveObject;
  * @author Taran
  */
 public class CalcObject {
-    private final static int MaximumPoints = 0x7FFFFFFF;
-    private final static int StateWidth = 7;
+    private final static int MAX_POINTS = 0x7FFFFFFF;
+    private final static double SPEED_OF_LIGHT = 299792458.0;
+    private final static int DELTA_WIDTH = 5;
+    private final static int DELTA_DX = 0;
+    private final static int DELTA_DY = 1;
+    private final static int DELTA_DZ = 2;
+    private final static int DELTA_DT = 3;
+    private final static int DELTA_DR = 4;
     
     private GlonassNavData navData = null;
     private double stepTime  =    1.0;
@@ -31,18 +37,14 @@ public class CalcObject {
     private final GiModel model = new GiModel();
     private final double position[];// = new double[6];
     private final HashMap<Integer, TreeMap<Double, double[]>> map = new HashMap();
-    private final HashMap<Integer, TreeMap<Double, Double>> delta = new HashMap();
+    private final HashMap<Integer, TreeMap<Double, double[]  >> delta = new HashMap();
     
     CalcObject() {
         //55.753649, 37.754987
         position = new double[] {
-//            2844410.44715917, 
-//            2202773.90845159, 
-//            5249162.97072981,
-
-            -5125976.8065,
-             2688801.6022,
-            -2669891.5334,
+            -5125976.8065 - 12.565,
+             2688801.6022 - 36.198,
+            -2669891.5334 - 6.750,
 
 //            -5125912.0, 
 //             2688768.0, 
@@ -51,7 +53,7 @@ public class CalcObject {
 //            -5125977.0,
 //             2688802.0,
 //            -2669892.0,
-            0.0, 0.0, 0.0, 
+            -0.0000004, 0.0, 0.0, 
             0.0
         };
     }
@@ -80,8 +82,8 @@ public class CalcObject {
             endTime = 0.0;
         }
         
-        if ((int)((endTime - startTime) / stepTime) - 1 > MaximumPoints) {
-            endTime = startTime + stepTime * MaximumPoints;
+        if ((int)((endTime - startTime) / stepTime) - 1 > MAX_POINTS) {
+            endTime = startTime + stepTime * MAX_POINTS;
         }
         
         System.arraycopy(navData.getState(), 0, initial, 0, navData.getState().length);
@@ -145,7 +147,7 @@ public class CalcObject {
         result[GlonassSet.VectorLength] = 
                 Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
         //TODO make cvel as const
-        result[GlonassSet.VectorLength] -= navData.getTimeOffset() * 299792458.0;
+        result[GlonassSet.VectorLength] -= (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT;
         
         return result;
     }
@@ -187,15 +189,22 @@ public class CalcObject {
             TreeMap<Double, double[]> a = entry.getValue().getData();
             TreeMap<Double, double[]> b = map.get(key);
             if (a != null && b != null) {
-                TreeMap<Double, Double> d = delta.get(key);
-                if (d == null) {
-                    d = new TreeMap();
-                    delta.put(key, d);
+                
+                TreeMap<Double, double[]> deltaRecord = delta.get(key);
+                if (deltaRecord == null) {
+                    deltaRecord = new TreeMap();
+                    delta.put(key, deltaRecord);
                 }
                 for (Map.Entry<Double, double[]> ea : a.entrySet()) {
                     double bv[] = b.get(ea.getKey());
                     if (bv != null && ea.getValue()[2] != 0.0) {
-                        d.put(ea.getKey(), bv[GlonassSet.VectorLength] - ea.getValue()[2]);
+                        double deltaValues[] = new double[DELTA_WIDTH];
+                        deltaValues[DELTA_DX] = (position[0] - bv[0]) / ea.getValue()[2];
+                        deltaValues[DELTA_DY] = (position[1] - bv[1]) / ea.getValue()[2];
+                        deltaValues[DELTA_DZ] = (position[2] - bv[2]) / ea.getValue()[2];
+                        deltaValues[DELTA_DT] = SPEED_OF_LIGHT;
+                        deltaValues[DELTA_DR] = bv[GlonassSet.VectorLength] - ea.getValue()[2]; // TODO replace index 2 to const value
+                        deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
             }
@@ -207,13 +216,13 @@ public class CalcObject {
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
-            for (HashMap.Entry<Integer, TreeMap<Double, Double>> tm : delta.entrySet()) {
-                for (Map.Entry<Double, Double> entry : tm.getValue().entrySet()) {
+            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
+                for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                     
                     line = String.format(Locale.ROOT, "%d\t%d\t%.12e\n", 
                             tm.getKey(), 
                             entry.getKey().longValue(), 
-                            entry.getValue()
+                            entry.getValue()[DELTA_DR]
                     );
                     bw.write(line);
                 }
@@ -225,16 +234,20 @@ public class CalcObject {
     }
     
     public int getLength() {
-        return delta.size();
+        int value = 0;
+        for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
+            value += tm.getValue().size();
+        }
+        return value;
     }
     
     public double sse() {
         double result = 0.0;
         double value;
         
-        for (HashMap.Entry<Integer, TreeMap<Double, Double>> tm : delta.entrySet()) {
-            for (Map.Entry<Double, Double> entry : tm.getValue().entrySet()) {
-                value = entry.getValue();
+        for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
+            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+                value = entry.getValue()[DELTA_DR];
                 result += value * value;
             }
         }
@@ -242,9 +255,18 @@ public class CalcObject {
         return result;
     }
     
-    public void jacobian(double jac[][]) {
-        for (int i = 0; i < jac[0].length; ++i) {
-            jac[0][i] = position[0] - 
+    public void copyJacobianAndDelta(double jacobian[][], double delta[]) {
+        int i = 0;
+        
+        for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : this.delta.entrySet()) {
+            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+                jacobian[0][i] = entry.getValue()[DELTA_DX];
+                jacobian[1][i] = entry.getValue()[DELTA_DY];
+                jacobian[2][i] = entry.getValue()[DELTA_DZ];
+                jacobian[3][i] = entry.getValue()[DELTA_DT];
+                delta[i] = entry.getValue()[DELTA_DR];
+                i++;
+            }
         }
     }
 }

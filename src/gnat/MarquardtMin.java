@@ -5,8 +5,9 @@ package gnat;
  * @author Taran
  */
 public class MarquardtMin {
-    private final static double EPS     = 1.0e-8;
-    private final static int    COUNT   = 100;
+    private final static double EPS             = 1.0e-8;
+    private final static int    COUNT           = 100;
+    private final static int    POSITION_SIZE   = 4;
     
 //    public enum Result { 
 //        MAR_OK(0), MAR_FAIL(1); 
@@ -22,13 +23,7 @@ public class MarquardtMin {
 //    int result = MAR_OK;
 //    int value, ok;
 //    double t = 1e-15;
-//    double lam = 1e-3;//1e-3;
 //    double scale = 0.5*(sqrt(5) + 1);
-//    double *x = malloc(s->n*sizeof(double));
-//    double *r = malloc(s->n*sizeof(double));
-//    double **g = (double **)mtx_create(s->n, 1);
-//    double **mx = (double **)mtx_create(s->n, 1);
-//    double **h = (double **)mtx_create(s->n, s->n);
 //    double **hi = (double **)mtx_create(s->n, s->n);
 //    double **jcbn = (double **)mtx_create(s->n, s->len);
 
@@ -46,19 +41,23 @@ public class MarquardtMin {
 //        double (*fnc)(double* args, double t, int n);
 //    };
 
-//    private double fncsse(double *args, struct minmarset* s) {
-//        int i;
-//        double value;
-//        double result = 0;
-//        double t;
-//
-//        for (i = 0; i < s->len; ++i) {
-//            t = ((double)(i) - s->xmean)/s->xstd;
-//            value = s->data[i] - s->fnc(args, t, s->n);
-//            result += value*value;
-//        }
-//        return result;
-//    }
+    private void jdfprod(double jcbn[][], double delta[], double jdf[][]) {
+        for (int i = 0; i < POSITION_SIZE; i++) {
+            jdf[i][0] = 0;
+            for (int j = 0; j < delta.length; j++) {
+                jdf[i][0] += jcbn[i][j] * delta[j];
+            }
+        }
+    }
+
+    private void jtoa(double jcbn[][], double a[][], double lam) {
+        Blas.sqr(jcbn, a);
+
+        for (int i = 0; i < POSITION_SIZE; i++) {
+            a[i][i] += lam * a[i][i];
+        }
+    }
+
     
     private double xstd(double mean, int len) {
         double std = 0;
@@ -79,14 +78,39 @@ public class MarquardtMin {
         boolean result = true;
         int count = COUNT;
         int len = co.getLength();
+        int k[] = new int[1];
         double eps = EPS;
         double xmean = (double)(len - 1) * 0.5;
+        double lam = 1e-3;
 
         double xstd = xstd(xmean, len);
+        double jcbn[][] = new double[POSITION_SIZE][len];
+        double delta[] = new double[len];
+        double h[][] = new double[POSITION_SIZE][POSITION_SIZE];
+        double g[][] = new double[POSITION_SIZE][1];
+        double r[] = new double[POSITION_SIZE];
+        double x[] = new double[POSITION_SIZE];
+        double mx[][] = new double[POSITION_SIZE][1];
 
         fmnl = co.sse();
         fmn = fmnl;
         System.out.println(fmn);
+        
+        co.copyJacobianAndDelta(jcbn, delta);
+        jtoa(jcbn, h, lam);
+        jdfprod(jcbn, delta, g);
+        result = Svd.svd_solver(h, g, mx, r, POSITION_SIZE, POSITION_SIZE, 1, k, 0);
+        Blas.save(jcbn, "j.txt");
+        for (int j = 0; j < POSITION_SIZE; j++) {
+            x[j] = mx[j][0];
+        }
+        
+        if (!result) {
+            System.out.println("SVD failed");
+            return result;
+            //TODO break;
+        }
+//        Blas.sub(x, x, r);
 //        for (i = 0; i < s->count; ++i) {
 //
 //            jacobian(jcbn, s);

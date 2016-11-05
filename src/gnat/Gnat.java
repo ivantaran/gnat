@@ -53,7 +53,7 @@ public class Gnat {
         
 //        co.save("co.txt");
         co.setObserves(hr.observeReader.getObjectList());
-//        co.saveDelta("delta.txt");
+        co.saveDelta("delta.txt");
         MarquardtMin mm = new MarquardtMin();
         mm.exec(co);
     }
