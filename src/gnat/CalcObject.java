@@ -42,9 +42,9 @@ public class CalcObject {
     CalcObject() {
         //55.753649, 37.754987
         position = new double[] {
-            -5125976.8065 - 12.565,
-             2688801.6022 - 36.198,
-            -2669891.5334 - 6.750,
+            -5125976.8065 - 21.7,
+             2688801.6022 - 24.5,
+            -2669891.5334 - 2.2,
 
 //            -5125912.0, 
 //             2688768.0, 
@@ -53,7 +53,7 @@ public class CalcObject {
 //            -5125977.0,
 //             2688802.0,
 //            -2669892.0,
-            -0.0000004, 0.0, 0.0, 
+            -5e-7, 0.0, 0.0, 
             0.0
         };
     }
@@ -104,7 +104,12 @@ public class CalcObject {
         for (double i = 0; i < startTimeAbs; i += stepTime) {
             model.step(gset);
         }
-                
+        
+//        gset.setStepTime(-navData.getTimeOffset());
+//        System.out.println(navData.getTimeOffset());
+        gset.setStepTime(-0.0701); //TODO correct rotation
+        model.step(gset);
+        
         gset.setStepTime(stepTime);
         
         return gset;
@@ -197,7 +202,7 @@ public class CalcObject {
                 }
                 for (Map.Entry<Double, double[]> ea : a.entrySet()) {
                     double bv[] = b.get(ea.getKey());
-                    if (bv != null && ea.getValue()[2] != 0.0) {
+                    if (bv != null && ea.getValue()[2] != 0.0 && ea.getValue()[5] > 36.0 && ea.getValue()[6] > 36.0) {
                         double deltaValues[] = new double[DELTA_WIDTH];
                         deltaValues[DELTA_DX] = (position[0] - bv[0]) / ea.getValue()[2];
                         deltaValues[DELTA_DY] = (position[1] - bv[1]) / ea.getValue()[2];

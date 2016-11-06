@@ -12,6 +12,7 @@ import java.util.Arrays;
  */
 public class GiModel {
     public static final double C20  = -1082.62575e-6;
+    public static final double J20  =  1082625.75e-9;
     public static final double AE   =  6378136.0;
     public static final double WE   =  7.292115e-5;
     public static final double MUE  =  398600.44e9;
@@ -34,7 +35,7 @@ public class GiModel {
         }
         
         a = -MUE / r / r / r;
-        b = 1.5 * C20 * MUE * AE * AE / r / r / r / r / r;
+        b = -1.5 * J20 * MUE * AE * AE / r / r / r / r / r;
         c = 5.0 * data[2] * data[2] / r / r;
 
         s.getDerivatives()[0] = data[3];
