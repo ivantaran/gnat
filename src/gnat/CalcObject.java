@@ -42,18 +42,12 @@ public class CalcObject {
     CalcObject() {
         //55.753649, 37.754987
         position = new double[] {
-            -5125976.8065 - 21.7,
-             2688801.6022 - 24.5,
-            -2669891.5334 - 2.2,
-
-//            -5125912.0, 
-//             2688768.0, 
-//            -2669858.0, 
-            
-//            -5125977.0,
-//             2688802.0,
-//            -2669892.0,
-            -5e-7, 0.0, 0.0, 
+             1448636.9300,
+            -3385243.6700,
+             5191046.9500,
+            0.0, 
+            0.0, 
+            0.0, 
             0.0
         };
     }
@@ -152,7 +146,8 @@ public class CalcObject {
         result[GlonassSet.VectorLength] = 
                 Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
         //TODO make cvel as const
-        result[GlonassSet.VectorLength] -= (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT;
+//        result[GlonassSet.VectorLength] -= (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT;
+        result[GlonassSet.VectorLength] = (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT;
         
         return result;
     }
@@ -186,11 +181,20 @@ public class CalcObject {
     }
     
     public void setObserves(HashMap<String, ObserveObject> observes) {
+        int key;
         for (HashMap.Entry<String, ObserveObject> entry : observes.entrySet()) {
             if (entry.getKey().charAt(0) != 'R') {
                 continue;
             }
-            int key = Integer.parseInt(entry.getKey().replaceAll("^\\D", ""));
+            
+            try {
+                key = Integer.parseInt(entry.getKey().replaceAll("^\\D", "").trim());
+            } catch (NumberFormatException e) {
+                System.out.println(e.getMessage());
+                System.out.println(entry.getKey());
+                continue;
+            }
+            
             TreeMap<Double, double[]> a = entry.getValue().getData();
             TreeMap<Double, double[]> b = map.get(key);
             if (a != null && b != null) {
@@ -202,13 +206,20 @@ public class CalcObject {
                 }
                 for (Map.Entry<Double, double[]> ea : a.entrySet()) {
                     double bv[] = b.get(ea.getKey());
-                    if (bv != null && ea.getValue()[2] != 0.0 && ea.getValue()[5] > 36.0 && ea.getValue()[6] > 36.0) {
+                    if (bv != null && ea.getValue()[2] != 0.0 && ea.getValue()[6] > 35.0 && ea.getValue()[7] > 35.0) {
+                        
+                        double theta = -(ea.getValue()[2] + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
+                        double x = bv[0] * Math.cos(theta) - bv[1] * Math.sin(theta);
+                        double y = bv[0] * Math.sin(theta) + bv[1] * Math.cos(theta);
+                        double z = bv[2];
+                        double gr = Math.sqrt((position[0] - x) * (position[0] - x) + (position[1] - y) * (position[1] - y) + (position[2] - z) * (position[2] - z));
+                        
                         double deltaValues[] = new double[DELTA_WIDTH];
-                        deltaValues[DELTA_DX] = (position[0] - bv[0]) / ea.getValue()[2];
-                        deltaValues[DELTA_DY] = (position[1] - bv[1]) / ea.getValue()[2];
-                        deltaValues[DELTA_DZ] = (position[2] - bv[2]) / ea.getValue()[2];
+                        deltaValues[DELTA_DX] = (position[0] - x) / gr;//ea.getValue()[4];
+                        deltaValues[DELTA_DY] = (position[1] - y) / gr;//ea.getValue()[4];
+                        deltaValues[DELTA_DZ] = (position[2] - z) / gr;//ea.getValue()[4];
                         deltaValues[DELTA_DT] = SPEED_OF_LIGHT;
-                        deltaValues[DELTA_DR] = bv[GlonassSet.VectorLength] - ea.getValue()[2]; // TODO replace index 2 to const value
+                        deltaValues[DELTA_DR] = (gr - ea.getValue()[2] - bv[GlonassSet.VectorLength]);//bv[GlonassSet.VectorLength] - (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT; // TODO replace index 2 to const value // ea.getValue()[5] - ea.getValue()[4];
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }

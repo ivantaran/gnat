@@ -100,13 +100,16 @@ public class MarquardtMin {
         jtoa(jcbn, h, lam);
         jdfprod(jcbn, delta, g);
         result = Svd.svd_solver(h, g, mx, r, POSITION_SIZE, POSITION_SIZE, 1, k, 0);
-        Blas.save(jcbn, "j.txt");
+//        Blas.save(jcbn, "j.txt");
         for (int j = 0; j < POSITION_SIZE; j++) {
             x[j] = mx[j][0];
         }
         
         if (!result) {
             System.out.println("SVD failed");
+//            for (int j = 0; j < POSITION_SIZE; j++) {
+//                System.out.println(x[j]);
+//            }
             return result;
             //TODO break;
         }

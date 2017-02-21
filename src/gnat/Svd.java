@@ -297,7 +297,7 @@ public final class Svd {
         int l = 0;
         double bmx;
         int niter = 0;
-        int niterm = 10*w;
+        int niterm = 10 * w;
         boolean elzero = false;
         boolean result;
         boolean ok = true;
@@ -310,7 +310,7 @@ public final class Svd {
         }
 
         for (int k = w - 1; k >= 0; --k) {
-    //        niterm = 10*w;  //?
+//            niterm = 10*w;  //?
             do {
                 result = false;
                 if (k != 0) {
@@ -344,7 +344,7 @@ public final class Svd {
                         m2dtod3(m, b, d, e, w, wb, k, l);
                         niter++;
                         if (niter > niterm) {
-    //                        printf("%d\n", niter);
+//                            System.out.printf("%d\n", niter);
                             ok = false;
                             result = false;
                         }
