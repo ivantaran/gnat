@@ -140,7 +140,7 @@ public final class Blas {
         for (j = 0; j < m[0].length; j++) {
             for (i = 0; i < m.length; i++)
                 for (k = 0; k < m.length; k++) 
-                    tmp[k][i] = m[k][j]*m[i][j];
+                    tmp[k][i] = m[k][j] * m[i][j];
 
             add(mr, tmp, mr);
         }
@@ -288,7 +288,7 @@ public final class Blas {
             
             for (double[] m1 : m) {
                 for (int j = 0; j < m[0].length; j++) {
-                    line = String.format(Locale.ROOT, "%12.12f ", m1[j]);
+                    line = String.format(Locale.ROOT, "%12.18g ", m1[j]);
                     bw.write(line);
                 }
                 bw.write("\n");

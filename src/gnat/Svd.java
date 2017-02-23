@@ -10,63 +10,69 @@ package gnat;
  */
 public final class Svd {
     
-    private static void gcl(double[][] m, double[] v, int h,  int index) {
-        for (int i = 0; i < h; ++i)
+    private static void getColumn(double[][] m, double[] v, int index) {
+        for (int i = 0; i < Math.min(v.length, m.length); i++) {
             v[i] = m[i][index];
+        }
     }
 
-    private static void pcl(double[][] m, double[] v, int h, int index) {
-        for (int i = 0; i < h; ++i)
+    private static void setColumn(double[][] m, double[] v, int index) {
+        for (int i = 0; i < Math.min(v.length, m.length); i++) {
             m[i][index] = v[i];
+        }
     }
 
-    private static void grw(double[][] m, double[] v, int w, int index) {
-        for (int i = 0; i < w; ++i)
+    private static void getRow(double[][] m, double[] v, int index) {
+        for (int i = 0; i < Math.min(v.length, m[index].length); i++) {
             v[i] = m[index][i];
+        }
     }
 
-    private static void prw(double[][] m, double[] v, int w, int index) {
-        for (int i = 0; i < w; ++i)
+    private static void setRow(double[][] m, double[] v, int index) {
+        for (int i = 0; i < Math.min(v.length, m[index].length); i++) {
             m[index][i] = v[i];
+        }
     }
 
-    private static void hsd(double[] v, double[] up, double[] b, int h, int l) {
-        double c1 = 0; 
-        double sd = 0;
+    private static void getHouseholder(double[] v, double[] up, double[] b, int l) {
+        double c1 = 0.0; 
+        double sd = 0.0;
         double c = Math.abs(v[l]);
-        double p = 0;
+        double p = 0.0;
 
-        for (int i = l + 1; i < h; ++i) {
+        for (int i = l + 1; i < v.length; i++) {
             c = Math.max(Math.abs(v[i]), c);
         }
 
-        if (c > 0) {
-            c1 = 1 / c;
+        if (c > 0.0) {
+            c1 = 1.0 / c;
             
-            for (int i = l; i < v.length; ++i) {
+            for (int i = l; i < v.length; i++) {
                 sd += v[i] * c1 * v[i] * c1;
             }
             
             p = sd;
             p = c * Math.sqrt(Math.abs(p));
-            if (v[l] > 0) p = -p;
+            if (v[l] > 0.0) {
+                p = -p;
+            }
             up[0] = v[l] - p;
             b[0] = 1 / (p * up[0]);
         }
     }
 
-    private static void hst(double[] v, double up, double b, double[] c, int h, int l) {
-        double dup = up;
-        double s = c[l] * dup;
-
-        for (int i = l + 1; i < h; ++i) {
+    private static void setHouseholder(double[] v, double up, double b, double[] c, int l) {
+        double s = c[l] * up;
+        int len = Math.min(c.length, v.length);
+        
+        for (int i = l + 1; i < len; i++) {
             s += c[i] * v[i];
         }
 
         s *= b;
-        c[l] += s * dup;
+        c[l] += s * up;
 
-        for (int i = l + 1; i < h; ++i) {
+        for (int i = l + 1; i < len; i++) {
             c[i] += s * v[i];
         }
     }
@@ -85,58 +91,67 @@ public final class Svd {
         Blas.zero(v);
         Blas.zero(s);
 
-        for (int i = 0; i < w; ++i) {
-            if ((i < w - 1) || (h  > w)) {   // !
-                gcl(m, v, h, i);
-                hsd(v, up, bb, h, i);
+        for (int i = 0; i < w; i++) {
+            if ((i < w - 1) || (h > w)) {
+                getColumn(m, v, i);
+                getHouseholder(v, up, bb, i);
                 
-                for (int j = i; j < w; ++j) {
-                    gcl(m, s, h, j);
-                    hst(v, up[0], bb[0], s, h, i);
-                    pcl(m, s, h, j);
+                for (int j = i; j < w; j++) {
+                    getColumn(m, s, j);
+                    setHouseholder(v, up[0], bb[0], s, i);
+                    setColumn(m, s, j);
                 }
 
-                for (int k = 0; k < wb; ++k) {
-                    gcl(b, s, h, k);
-                    hst(v, up[0], bb[0], s, h, i);
-                    pcl(b, s, h, k);
+                for (int k = 0; k < wb; k++) {
+                    getColumn(b, s, k);
+                    setHouseholder(v, up[0], bb[0], s, i);
+                    setColumn(b, s, k);
                 }
             }
 
             if (i < w - 2) {
-                grw(m, v, w, i);
-                hsd(v, up, bb, w, i + 1);
+                getRow(m, v, i);
+                getHouseholder(v, up, bb, i + 1);
                 ups[i] = up[0];
                 bbs[i] = bb[0];
-                for (int j = i; j < h; ++j) {
-                    grw(m, s, w, j);
-                    hst(v, up[0], bb[0], s, w, i + 1);
-                    if (j == i)
-                        for (int k = i + 2; k < w; ++k)
+                for (int j = i; j < h; j++) {
+                    getRow(m, s, j);
+                    setHouseholder(v, up[0], bb[0], s, i + 1);
+                    if (j == i) {
+                        for (int k = i + 2; k < w; k++) {
                             s[k] = v[k];
-                    prw(m, s, w, j);
+                        }
+                    }
+                    setRow(m, s, j);
                 }
             }
         }
-        if (w > 1)
-            for (int i = 1; i < w; ++i) {
+        
+        if (w > 1) {
+            for (int i = 1; i < w; i++) {
                 d[i] = m[i][i];
                 e[i] = m[i - 1][i];
             }
-
+        }
+        
         d[0] = m[0][0];
         e[0] = 0;
-        for (int i = w - 1; i >= 0; --i) {
-            if (i < w - 1) grw(m, v, w, i);
-            for (int k = 0; k < w; ++k)
-                m[i][k] = 0;
-            m[i][i] = 1;
-            if (i < w - 2)
-                for (int k = i; k < w; ++k) {
-                    gcl(m, s, h, k);
-                    hst(v, ups[i], bbs[i], s, w, i + 1);
-                    pcl(m, s, h, k);
+        
+        for (int i = w - 1; i >= 0; i--) {
+            if (i < w - 1) {
+                getRow(m, v, i);
+            }
+            for (int k = 0; k < w; k++) {
+                m[i][k] = 0.0;
+            }
+            m[i][i] = 1.0;
+            if (i < w - 2) {
+                for (int k = i; k < w; k++) {
+                    getColumn(m, s, k);
+                    setHouseholder(v, ups[i], bbs[i], s, i + 1);
+                    setColumn(m, s, k);
                 }
+            }
         }
 
     }
@@ -220,7 +235,7 @@ public final class Svd {
                 gvt(e, i, h, 0, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < w; ++j)
+            for (int j = 0; j < w; j++)
                 gvt(m[j], i, m[j], k, cs[0], sn[0]);
         }
     }
@@ -232,7 +247,7 @@ public final class Svd {
         double[] h = Blas.getVector(1);
 
 
-        for (int i = l; i < k + 1; ++i) {
+        for (int i = l; i < k + 1; i++) {
             if (i == l)
                 gva(d, i, e, i, cs, sn);
             else
@@ -243,7 +258,7 @@ public final class Svd {
                 gvt(e, i + 1, h, 0, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < wb; ++j)
+            for (int j = 0; j < wb; j++)
                 gvt(cs, 0, sn, 0, b[i][j], b[l - 1][j]);
         }
     }
@@ -268,7 +283,7 @@ public final class Svd {
             t = f - g;
         f = ((d[l] - d[k]) * (d[l] + d[k]) + e[k] * (d[k - 1] / t - e[k])) / d[l];
 
-        for (int i = l; i < k; ++i) {
+        for (int i = l; i < k; i++) {
             if (i == l)
                 gvd(f, e[i + 1], cs, sn);
             else
@@ -277,7 +292,7 @@ public final class Svd {
             h[0] = 0;
             gvt(h, 0, d, i + 1, cs[0], sn[0]);
 
-            for (int j = 0; j < w; ++j)
+            for (int j = 0; j < w; j++)
                 gvt(m[j], i, m[j], i + 1, cs[0], sn[0]);
 
             gva(d, i, h, 0, cs, sn);
@@ -288,7 +303,7 @@ public final class Svd {
                 gvt(h, 0, e, i + 2, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < wb; ++j)
+            for (int j = 0; j < wb; j++)
                 gvt(b[i], j, b[i + 1], j, cs[0], sn[0]);
         }
     }
@@ -304,19 +319,19 @@ public final class Svd {
 
         bmx = d[0];
 
-        if (w > 0) {
-            for (int i = 1; i < w; ++i)
+        if (w > 1) {
+            for (int i = 1; i < w; i++) {
                 bmx = Math.max(Math.abs(d[i]) + Math.abs(e[i]), bmx);
+            }
         }
 
-        for (int k = w - 1; k >= 0; --k) {
-//            niterm = 10*w;  //?
+        for (int k = w - 1; k >= 0; k--) {
             do {
                 result = false;
                 if (k != 0) {
-                    if ((bmx + d[k]) - bmx == 0)
-    //                if (d[k] == 0)
+                    if ((bmx + d[k]) - bmx == 0) { // TODO check d[k] == 0
                         m2dtod1(m, d, e, w, k);
+                    }
 
                     for (int ll = k; ll >= 0; --ll) {
                         l = ll;
@@ -354,7 +369,7 @@ public final class Svd {
 
             if (d[k] < 0) {
                 d[k] = -d[k];
-                for (int j = 0; j < w; ++j)
+                for (int j = 0; j < w; j++)
                     m[j][k] = -m[j][k];
             }
         }
@@ -371,11 +386,11 @@ public final class Svd {
         index = 1;
         do {
             if (d[index] > d[index - 1]) {
-                for (int i = 1; i < w; ++i) {
+                for (int i = 1; i < w; i++) {
                     t = d[i - 1];
                     k = i - 1;
 
-                    for (int j = i; j < w; ++j)
+                    for (int j = i; j < w; j++)
                         if (t < d[j]) {
                             t = d[j];
                             k = j;
@@ -385,13 +400,13 @@ public final class Svd {
                         d[k] = d[i - 1];
                         d[i - 1] = t;
 
-                        for (int j = 0; j < w; ++j) {
+                        for (int j = 0; j < w; j++) {
                             t = m[j][k];
                             m[j][k] = m[j][i - 1];
                             m[j][i - 1] = t;
                         }
 
-                        for (int j = 0; j < wb; ++j) {
+                        for (int j = 0; j < wb; j++) {
                             t = b[k][j];
                             b[k][j] = b[i - 1][j];
                             b[i - 1][j] = t;
@@ -415,27 +430,27 @@ public final class Svd {
         frac = Math.abs(frac);
         if (frac < eps) frac = eps;
 
-        for (int i = 0; i < w; ++i)
+        for (int i = 0; i < w; i++)
             sinmax = Math.max(sinmax, d[i]);
 
         sinmin = sinmax*frac;
 
         kk = w;
-        for (int i = 0; i < w; ++i) 
+        for (int i = 0; i < w; i++) 
             if (d[i] <= sinmin) {
                 kk = i;
                 break;
             }
 
-        for (int i = 0; i < h; ++i)
+        for (int i = 0; i < h; i++)
             if (i < kk) {
                 s1 = 1 / d[i];
 
-                for (int j = 0; j < wb; ++j)
+                for (int j = 0; j < wb; j++)
                     b[i][j] *= s1;
             }
             else
-                for (int j = 0; j < wb; ++j) {
+                for (int j = 0; j < wb; j++) {
                     if (i == kk)
                         r[j] = b[i][j] * b[i][j];
                     else
@@ -444,10 +459,10 @@ public final class Svd {
                     if (i < w) b[i][j] = 0;
                 }
 
-        for (int i = 0; i < w; ++i)
-            for (int j = 0; j < wb; ++j) {
+        for (int i = 0; i < w; i++)
+            for (int j = 0; j < wb; j++) {
                 x[i][j] = 0;
-                for (int k = 0; k < w; ++k)
+                for (int k = 0; k < w; k++)
                     x[i][j] += m[i][k]*b[k][j];
             }
         kn[0] = kk;
@@ -468,19 +483,19 @@ public final class Svd {
         frac = Math.abs(frac);
         if (frac < eps) frac = eps;
 
-        for (i = 0; i < w; ++i)
+        for (i = 0; i < w; i++)
             sinmax = Math.max(sinmax, d[i]);
 
         sinmin = sinmax * frac;
 
         kk = w;
-        for (i = 0; i < w; ++i) 
+        for (i = 0; i < w; i++) 
             if (d[i] <= sinmin) {
                 kk = i;
                 break;
             }
 
-        for (i = 0; i < h; ++i) {
+        for (i = 0; i < h; i++) {
             g = b[i][0];
             if (i < kk) {
                 den1 = 1 / (d[i] * d[i] + lam2);
@@ -496,11 +511,11 @@ public final class Svd {
             }
         }
 
-        for (i = 0; i < w; ++i) {
+        for (i = 0; i < w; i++) {
             x1[i] = 0;
             x2[i] = 0;
 
-            for (k = 0; k < w; ++k) {
+            for (k = 0; k < w; k++) {
                 x1[i] += m[i][k] * p1[k];
                 x2[i] += m[i][k] * p2[k];
             }
@@ -534,14 +549,19 @@ public final class Svd {
         double[] d = Blas.getVector(w);
         double[] e = Blas.getVector(w);
 
+//        Blas.save(m, "a.txt");
+//        Blas.save(b, "b.txt");
         mto2d(m, b, d, e, h, w, wb);
+//        Blas.save(m, "m.txt");
+//        Blas.save(d, "d.txt");
+//        Blas.save(e, "e.txt");
 
         result = mtx_2dtod(m, b, d, e, h, w, wb);
 
-    //    mtx_print(m, h, w);
-    //    mtx_print(b, h, wb);
-    //    vcr_print(d, w);
-    //    vcr_print(e, w);
+//        mtx_print(m, h, w);
+//        mtx_print(b, h, wb);
+//        vcr_print(d, w);
+//        vcr_print(e, w);
 
         mdsort(m, b, d, h, w, wb);
 
