@@ -163,23 +163,28 @@ public final class Svd {
 
         if (a1 > a2) {
             w = v2 / v1;
-            q = Math.sqrt(1 + w * w);
-            c[0] = 1 / q;
-            if (v1 < 0) c[0] = -c[0];
+            q = Math.sqrt(1.0 + w * w);
+            c[0] = 1.0 / q;
+            if (v1 < 0.0) {
+                c[0] = -c[0];
+            }
             s[0] = c[0] * w;
         }
-        else
-            if (v2 != 0) {
+        else {
+            if (v2 != 0.0) {
                 w = v1 / v2;
-                q = Math.sqrt(1 + w * w);
-                s[0] = 1 / q;
-                if (v2 < 0) s[0] = -s[0];
+                q = Math.sqrt(1.0 + w * w);
+                s[0] = 1.0 / q;
+                if (v2 < 0.0) {
+                    s[0] = -s[0];
+                }
                 c[0] = s[0] * w;
             }
             else {
-                c[0] = 1;
-                s[0] = 0;
+                c[0] = 1.0;
+                s[0] = 0.0;
             }
+        }
     }
 
     private static void gva(double[] v1, int i1, double[] v2, int i2 , double[] c, double[] s) {
@@ -219,98 +224,115 @@ public final class Svd {
 
     private static void gvt(double[] z1, int i1, double[] z2, int i2, double c, double s) {
         double w = z1[i1] * c + z2[i2] * s;
-        z2[0] = -z1[i1] * s + z2[i2] * c;
-        z1[0] = w;
+        z2[i2] = -z1[i1] * s + z2[i2] * c;
+        z1[i1] = w;
     }
 
-    private static void m2dtod1(double[][] m, double[] d, double[] e, int w, int k) {
+    private static void m2dtod1(double[][] m, double[] d, double[] e, int k) {
         
         double[] cs = Blas.getVector(1);
         double[] sn = Blas.getVector(1);
-        double[] h = Blas.getVector(1);
+        double[] h  = Blas.getVector(1);
         
         for (int i = k - 1; k >= 0; --k) {
             if (i == k - 1) {
                 gva(d, i, e, i + 1, cs, sn);
             }
-            else
+            else {
                 gva(d, i, h, 0, cs, sn);
+            }
 
             if (i > 0) {
-                h[0] = 0;
+                h[0] = 0.0;
                 gvt(e, i, h, 0, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < w; j++)
+            for (int j = 0; j < m.length; j++) {
                 gvt(m[j], i, m[j], k, cs[0], sn[0]);
+            }
         }
     }
 
-    private static void m2dtod2(double[][] b, double[] d, double[] e, int wb, int k, int l) {
+    private static void m2dtod2(double[][] b, double[] d, double[] e, int k, int l) {
         
         double[] cs = Blas.getVector(1);
         double[] sn = Blas.getVector(1);
-        double[] h = Blas.getVector(1);
+        double[] h  = Blas.getVector(1);
 
 
         for (int i = l; i < k + 1; i++) {
-            if (i == l)
+            
+            if (i == l) {
                 gva(d, i, e, i, cs, sn);
-            else
+            }
+            else {
                 gva(d, i, h, 0, cs, sn);
-
+            }
+            
             if (i < k) {
-                h[0] = 0;
+                h[0] = 0.0;
                 gvt(e, i + 1, h, 0, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < wb; j++)
+            for (int j = 0; j < Math.min(b[i].length, b[l - 1].length); j++) {
                 gvt(cs, 0, sn, 0, b[i][j], b[l - 1][j]);
+            }
         }
     }
 
-    private static void m2dtod3(double[][] m, double[][] b, double[] d, double[] e, int w, int wb, int k, int l) {
+    private static void m2dtod3(double[][] m, double[][] b, double[] d, double[] e, int k, int l) {
         double f, g, t;
         double[] cs = Blas.getVector(1);
         double[] sn = Blas.getVector(1);
-        double[] h = Blas.getVector(1);
+        double[] h  = Blas.getVector(1);
 
         f = ((d[k - 1] - d[k]) * (d[k - 1] + d[k]) +
-             (e[k - 1] - e[k]) * (e[k - 1] + e[k])) / (2 * e[k] * d[k - 1]);
+             (e[k - 1] - e[k]) * (e[k - 1] + e[k])) / (2.0 * e[k] * d[k - 1]);
 
-        if (Math.abs(f) > 1e10) 
+        if (Math.abs(f) > 1.0e10) {//TODO remove magic number
             g = Math.abs(f);
-        else
-            g = Math.sqrt(1 + f * f);
-
-        if (f >= 0)
+        }
+        else {
+            g = Math.sqrt(1.0 + f * f);
+        }
+        
+        if (f >= 0.0) {
             t = f + g;
-        else
+        }
+        else {
             t = f - g;
+        }
+        
         f = ((d[l] - d[k]) * (d[l] + d[k]) + e[k] * (d[k - 1] / t - e[k])) / d[l];
 
         for (int i = l; i < k; i++) {
-            if (i == l)
+            
+            if (i == l) {
                 gvd(f, e[i + 1], cs, sn);
-            else
+            }
+            else {
                 gva(e, i, h, 0, cs, sn);
+            }
+            
             gvt(d, i, e, i + 1, cs[0], sn[0]);
-            h[0] = 0;
+            h[0] = 0.0;
             gvt(h, 0, d, i + 1, cs[0], sn[0]);
 
-            for (int j = 0; j < w; j++)
+            for (int j = 0; j < m.length; j++) {
                 gvt(m[j], i, m[j], i + 1, cs[0], sn[0]);
-
+            }
+            
             gva(d, i, h, 0, cs, sn);
             gvt(e, i + 1, d, i + 1, cs[0], sn[0]);
 
             if (i < k - 1) {
-                h[0] = 0;
+                h[0] = 0.0;
                 gvt(h, 0, e, i + 2, cs[0], sn[0]);
             }
 
-            for (int j = 0; j < wb; j++)
+            for (int j = 0; j < Math.min(b[i].length, b[i + 1].length); j++) {
                 gvt(b[i], j, b[i + 1], j, cs[0], sn[0]);
+            }
         }
     }
 
@@ -331,20 +353,26 @@ public final class Svd {
         }
 
         for (int k = w - 1; k >= 0; k--) {
-            niter = 0;
+//            niter = 0;
             if (k != 0) {
                 do {
-//                    if ((bmx + d[k]) - bmx == 0.0) { // TODO check double == 0
-                        m2dtod1(m, d, e, w, k);
-//                    }
+
+                    if ((bmx + d[k]) - bmx == 0.0) { // TODO check double == 0
+                        m2dtod1(m, d, e, k);
+                    }
 
                     for (int ll = k; ll >= 0; --ll) {
+                        
                         l = ll;
-                        if (l == 0) {
+                        
+                        if (l == 0) { // TODO remove if {} and correct ll >= 0
                             elzero = false;
                             break;
                         }
+                        
                         else { 
+//                            System.out.printf("el %f\n", e[l]);
+//                            System.out.printf("dl-1 %f\n", d[l - 1]);
                             if ((bmx - e[l]) - bmx == 0.0) { // TODO check double == 0
                                 elzero = true;
                                 break;
@@ -358,11 +386,11 @@ public final class Svd {
                     }
 
                     if ((l > 0) && !elzero) {
-                        m2dtod2(b, d, e, wb, k, l);
+                        m2dtod2(b, d, e, k, l);
                     }
                     
                     if (l != k) {
-                        m2dtod3(m, b, d, e, w, wb, k, l);
+                        m2dtod3(m, b, d, e, k, l);
                         niter++;
                     }
                     else {
@@ -372,7 +400,11 @@ public final class Svd {
             }
 
             ok = (niter <= niterm);
-
+            
+            if (!ok) {
+                System.out.println("!ok");
+            }
+            
             if (d[k] < 0.0) {
                 d[k] = -d[k];
                 for (int j = 0; j < w; j++) {

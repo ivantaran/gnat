@@ -97,41 +97,19 @@ public class MarquardtMin {
         
         co.copyJacobianAndDelta(jcbn, delta);
         jtoa(jcbn, h, lam);
-
-        h[0][0] = 4;
-        h[0][1] = 3;
-        h[0][2] = 2;
-        h[0][3] = 1;
-        h[1][0] = 3;
-        h[1][1] = 4;
-        h[1][2] = 3;
-        h[1][3] = 2;
-        h[2][0] = 2;
-        h[2][1] = 3;
-        h[2][2] = 4;
-        h[2][3] = 3;
-        h[3][0] = 1;
-        h[3][1] = 2;
-        h[3][2] = 3;
-        h[3][3] = 4;
-
         jdfprod(jcbn, delta, g);
-//        Blas.save(jcbn, "j.txt");
-        g[0][0] = 1;
-        g[1][0] = 2;
-        g[2][0] = 3;
-        g[3][0] = 4;
         
         result = Svd.svd_solver(h, g, mx, r, POSITION_SIZE, POSITION_SIZE, 1, k, 0);
         for (int j = 0; j < POSITION_SIZE; j++) {
             x[j] = mx[j][0];
         }
         
+        for (int j = 0; j < POSITION_SIZE; j++) {
+            System.out.println(x[j]);
+        }
+        
         if (!result) {
             System.out.println("SVD failed");
-//            for (int j = 0; j < POSITION_SIZE; j++) {
-//                System.out.println(x[j]);
-//            }
             return result;
             //TODO break;
         }
