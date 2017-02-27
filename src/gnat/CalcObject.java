@@ -209,7 +209,7 @@ public class CalcObject {
                     double bv[] = b.get(ea.getKey());
                     if (bv != null && ea.getValue()[2] != 0.0 && ea.getValue()[6] > 35.0 && ea.getValue()[6] > 35.0) {
                         
-                        double theta = -(ea.getValue()[2] + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL ;
+                        double theta = -(ea.getValue()[2] + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
                         double x = bv[0] * Math.cos(theta) - bv[1] * Math.sin(theta);
                         double y = bv[0] * Math.sin(theta) + bv[1] * Math.cos(theta);
                         double z = bv[2];
@@ -218,11 +218,11 @@ public class CalcObject {
 //                        double dr = ((position[0] - bv[0]) * bv[3] + (position[1] - bv[1]) * bv[4] + (position[2] - bv[2]) * bv[5]) / SPEED_OF_LIGHT;
 
                         double deltaValues[] = new double[DELTA_WIDTH];
-                        deltaValues[DELTA_DX] = (position[0] - x) / gr;//ea.getValue()[4];
-                        deltaValues[DELTA_DY] = (position[1] - y) / gr;//ea.getValue()[4];
-                        deltaValues[DELTA_DZ] = (position[2] - z) / gr;//ea.getValue()[4];
+                        deltaValues[DELTA_DX] = (position[0] - x) / gr;
+                        deltaValues[DELTA_DY] = (position[1] - y) / gr;
+                        deltaValues[DELTA_DZ] = (position[2] - z) / gr;
                         deltaValues[DELTA_DT] = 1.0;
-                        deltaValues[DELTA_DR] = (gr - ea.getValue()[2] - bv[GlonassSet.VectorLength]) + dr;//bv[GlonassSet.VectorLength] - (navData.getTimeOffset() + position[3]) * SPEED_OF_LIGHT; // TODO replace index 2 to const value // ea.getValue()[5] - ea.getValue()[4];
+                        deltaValues[DELTA_DR] = (gr - ea.getValue()[2] - bv[GlonassSet.VectorLength]) + dr;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
