@@ -6,6 +6,8 @@ package gnat;
  */
 public class MarquardtMin {
     private final static double EPS             = 1.0e-8;
+    private final static double TOLERANCE       = 1.0e-15;
+    private final static double SCALE           = 0.5 * (Math.sqrt(5.0) + 1.0);
     private final static int    COUNT           = 100;
     private final static int    POSITION_SIZE   = 4;
     
@@ -19,10 +21,7 @@ public class MarquardtMin {
 //        }
 //    }
 
-//    int i, j, k;
-//    int result = MAR_OK;
 //    int value, ok;
-//    double t = 1e-15;
 //    double scale = 0.5*(sqrt(5) + 1);
 //    double **hi = (double **)mtx_create(s->n, s->n);
 //    double **jcbn = (double **)mtx_create(s->n, s->len);
@@ -73,16 +72,14 @@ public class MarquardtMin {
     }
     
     public boolean exec(CalcObject co) {
-        double fmn, fmnl, f1, f2;
+        int i;
+        double fmn, fmnl, f1;
         boolean result = true;
-        int count = COUNT;
+        boolean ok;
         int len = co.getLength();
         int k[] = new int[1];
-        double eps = EPS;
-        double xmean = (double)(len - 1) * 0.5;
         double lam = 1e-3;
 
-        double xstd = xstd(xmean, len);
         double jcbn[][] = new double[POSITION_SIZE][len];
         double delta[] = new double[len];
         double h[][] = new double[POSITION_SIZE][POSITION_SIZE];
@@ -95,73 +92,50 @@ public class MarquardtMin {
         fmn = fmnl;
         System.out.println(fmn);
         
-        co.copyJacobianAndDelta(jcbn, delta);
-        jtoa(jcbn, h, lam);
-        jdfprod(jcbn, delta, g);
-        
-        result = Svd.svd_solver(h, g, mx, r, POSITION_SIZE, POSITION_SIZE, 1, k, 0);
-        for (int j = 0; j < POSITION_SIZE; j++) {
-            x[j] = mx[j][0];
+        for (i = 0; i < COUNT; i++) {
+            co.copyJacobianAndDelta(jcbn, delta);
+            jtoa(jcbn, h, lam);
+            jdfprod(jcbn, delta, g);
+
+            result = Svd.svd_solver(h, g, mx, r, POSITION_SIZE, POSITION_SIZE, 1, k, 0);
+            for (int j = 0; j < POSITION_SIZE; j++) {
+                x[j] = mx[j][0];
+            }
+
+            for (int j = 0; j < POSITION_SIZE; j++) {
+                System.out.println(x[j]);
+            }
+
+            if (!result) {
+                System.out.println("SVD failed");
+                break;
+            }
+
+            Blas.sub(co.getPosition(), x, x);
+            f1 = co.sse();
+            if (f1 <= fmnl) {
+                lam /= SCALE;
+                Blas.copy(x, co.getPosition());
+                fmn = f1;
+                ok = true;
+            }
+            else {
+                lam *= SCALE;
+                ok = false;
+            }
+
+            if (ok) {
+                if (Math.abs(fmnl - fmn) < EPS * Math.abs(fmn) + TOLERANCE) {
+                    break;            
+                }
+                fmnl = fmn;            
+            }
         }
         
-        for (int j = 0; j < POSITION_SIZE; j++) {
-            System.out.println(x[j]);
+        if (i >= COUNT) {
+            result = false;
         }
         
-        if (!result) {
-            System.out.println("SVD failed");
-            return result;
-            //TODO break;
-        }
-//        Blas.sub(x, x, r);
-//        for (i = 0; i < s->count; ++i) {
-//
-//            jacobian(jcbn, s);
-//            jtoa(jcbn, h, lam, s);
-//            jdfprod(jcbn, g, s);
-//
-//            value = mtx_svd_solver(h, g, mx, r, s->n, s->n, 1, &k, 0);
-//            for (j = 0; j < s->n; ++j)
-//                x[j] = mx[j][0];
-//
-//            if (!value) {
-//                result = MAR_SVD_ERR;
-//                break;
-//            }
-//
-//            vcr_dlt(s->x, x, x, s->n);
-//
-//            f1 = fncsse(x, s);
-//
-//            if (f1 <= fmnl) {
-//                lam /= scale;
-//                memcpy(s->x, x, s->n*sizeof(double));
-//                fmn = f1;
-//                ok = TRUE;
-//            }
-//            else {
-//                lam *= scale;
-//                ok = FALSE;
-//            }
-//
-//            if (ok) {
-//                if (fabs(fmnl - fmn) < s->eps*fabs(fmn) + t) 
-//                    break;            
-//                fmnl = fmn;
-//            }
-//        }
-//    
-//        if (i == s->count) result = MAR_FAILED;
-//        s->fmin = fmn;
-//            printf("i = % d; lam %g;\n", i, lam);
-//        mtx_save(jcbn, s->n, s->len, "jcbn.txt");
-//
-//        mtx_free(h, s->n);
-//        mtx_free(g, 1);
-//        mtx_free(mx, 1);
-//        mtx_free(jcbn, s->n);
-//        free(x);
-//        free(r);
         return result;
     }
 }

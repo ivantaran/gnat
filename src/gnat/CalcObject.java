@@ -9,6 +9,7 @@ package gnat;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -31,6 +32,8 @@ public class CalcObject {
     private final static int DELTA_DR = 4;
     
     private GlonassNavData navData = null;
+    private final ArrayList<GlonassNavData> navDataList = new ArrayList();
+    
     private double stepTime  =    1.0;
     private double startTime = -900.0;
     private double endTime   =  900.0;
@@ -57,8 +60,17 @@ public class CalcObject {
         calculate();
     }
     
+    public double[] getPosition() {
+        return position;
+    }
+    
     public void add(GlonassNavData navData) {
         this.navData = navData;
+        calculate();
+    }
+    
+    public void addGlonassNavDataList(ArrayList<GlonassNavData> navDataList) {
+        this.navDataList.addAll(navDataList);
         calculate();
     }
     

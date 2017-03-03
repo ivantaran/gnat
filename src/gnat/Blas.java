@@ -56,9 +56,9 @@ public final class Blas {
     }
     
     public static void sub(double[] v1, double[] v2, double[] vr) {
-        int i;
-        for (i = 0; i < v1.length; i++)
+        for (int i = 0; i < Math.min(Math.min(v1.length, v1.length), vr.length); i++) {
             vr[i] = v1[i] - v2[i];
+        }
     }
     
     public static void mul(double[][] m1, double[][] m2, double[][] mr) {
