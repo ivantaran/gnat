@@ -50,9 +50,9 @@ public final class Blas {
     }
     
     public static void add(double[] v1, double[] v2, double[] vr) {
-        int i;
-        for (i = 0; i < v1.length; i++)
+        for (int i = 0; i < Math.min(Math.min(v1.length, v1.length), vr.length); i++) {
             vr[i] = v1[i] + v2[i];
+        }
     }
     
     public static void sub(double[] v1, double[] v2, double[] vr) {
@@ -172,9 +172,9 @@ public final class Blas {
         return m;
     }
 
-    public static void copy(double[] v, double[] vr) {
-        vr = v.clone();
-    }
+//    public static void copy(double[] v, double[] vr) { //TODO remove wrong copy, this is clone
+//        vr = v.clone();
+//    }
 
     public static boolean hol(double[][] m, double[][] mr) {
         int l, j, k;

@@ -1,5 +1,7 @@
 package gnat;
 
+import java.util.Locale;
+
 /**
  *
  * @author Taran
@@ -88,9 +90,10 @@ public class MarquardtMin {
         double x[] = new double[POSITION_SIZE];
         double mx[][] = new double[POSITION_SIZE][1];
 
-        fmnl = co.sse();
+        fmnl = co.sse(co.getPosition());
         fmn = fmnl;
-        System.out.println(fmn);
+        f1 = fmnl;
+        System.out.printf(Locale.ROOT, "sse: %f\n\n", fmn);
         
         for (i = 0; i < COUNT; i++) {
             co.copyJacobianAndDelta(jcbn, delta);
@@ -111,11 +114,13 @@ public class MarquardtMin {
                 break;
             }
 
-            Blas.sub(co.getPosition(), x, x);
-            f1 = co.sse();
+            Blas.add(co.getPosition(), x, x);
+            f1 = co.sse(x);
+            System.out.printf(Locale.ROOT, "sse[%s]: %f\n\n", i, f1);
+            
             if (f1 <= fmnl) {
                 lam /= SCALE;
-                Blas.copy(x, co.getPosition());
+                System.arraycopy(x, 0, co.getPosition(), 0, Math.min(x.length, co.getPosition().length));
                 fmn = f1;
                 ok = true;
             }
@@ -134,6 +139,13 @@ public class MarquardtMin {
         
         if (i >= COUNT) {
             result = false;
+        }
+        
+        System.out.println("");
+        System.out.printf(Locale.ROOT, "sse[%d]: %f\n\n", i, fmnl);
+        
+        for (int j = 0; j < POSITION_SIZE; j++) {
+            System.out.println(x[j]);
         }
         
         return result;

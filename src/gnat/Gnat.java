@@ -21,7 +21,7 @@ public class Gnat {
         File flist[];
         RinexReader hr = new RinexReader();
         
-        flist = (new File("e:\\data\\rnx\\obs")).listFiles();
+        flist = (new File("e:\\data\\rnx\\2\\obs")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
                 hr.open(f.getAbsolutePath());
@@ -35,7 +35,7 @@ public class Gnat {
         
         RinexReader ndr = new RinexReader();
 
-        flist = (new File("e:\\data\\rnx\\nav")).listFiles();
+        flist = (new File("e:\\data\\rnx\\2\\nav")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
                 ndr.open(f.getAbsolutePath());
@@ -43,18 +43,15 @@ public class Gnat {
             }
         }
     
-//        ndr.gnd_tmp.save();
+        ndr.gnd_tmp.save();
         
         CalcObject co = new CalcObject();
-        
-        for (GlonassNavData nd : ndr.gnd_tmp.getNavDataList()) {
-            co.add(nd);
-        }
+        co.addGlonassNavDataList(ndr.gnd_tmp.getNavDataList());
         
 //        co.save("co.txt");
-        co.setObserves(hr.observeReader.getObjectList());
-        co.saveDelta("delta.txt");
+        co.addObservesMap(hr.observeReader.getObjectList());
         MarquardtMin mm = new MarquardtMin();
         mm.exec(co);
+        co.saveDelta("delta.txt");
     }
 }

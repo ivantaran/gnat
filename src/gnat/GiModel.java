@@ -9,11 +9,10 @@ package gnat;
  * @author Taran
  */
 public class GiModel {
-    public static final double C20  = -1082.62575e-6;
     public static final double J20  =  1082625.75e-9;
     public static final double AE   =  6378136.0;
-    public static final double WE   =  7.292115e-5;
-    public static final double MUE  =  398600.44e9;
+    public static final double WE   =  7.2921151467e-5;
+    public static final double MUE  =  398600.4418e9;
     public static final double CVEL =  299792458.0;
         
     private void gimodel(GlonassSet s) {
@@ -41,23 +40,15 @@ public class GiModel {
         s.getDerivatives()[2] = data[5];
         
         s.getDerivatives()[3] = 
-                a * data[0] + 
-                b * data[0] * (1.0 - c) + 
-                WE * WE * data[0] + 
-                2.0 * WE * data[4] + 
-                data[6];
+                (a + b * (1.0 - c) + WE * WE) * data[0] + 
+                2.0 * WE * data[4] + data[6];
 
         s.getDerivatives()[4] = 
-                a * data[1] + 
-                b * data[1] * (1.0 - c) + 
-                WE * WE * data[1] - 
-                2.0 * WE * data[3] + 
-                data[7];
+                (a + b * (1.0 - c) + WE * WE) * data[1] - 
+                2.0 * WE * data[3] + data[7];
 
         s.getDerivatives()[5] = 
-                a * data[2] + 
-                b * data[2] * (3.0 - c) + 
-                data[8];
+                (a + b * (3.0 - c)) * data[2] + data[8];
     }
     
     public void step(GlonassSet s) {
