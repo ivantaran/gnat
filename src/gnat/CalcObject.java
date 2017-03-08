@@ -43,9 +43,15 @@ public class CalcObject {
     CalcObject() {
         //55.753649, 37.754987
         position = new double[] {
-             1448636.9300,
-            -3385243.6700,
-             5191046.9500,
+//             1448636.9300,
+//            -3385243.6700,
+//             5191046.9500,
+            -5125976.8065, 
+            2688801.6022,
+            -2669891.5334, 
+            0.0,
+            0.0,
+            0.0,  
             0.0,
             0.0,
             0.0,  
@@ -172,6 +178,10 @@ public class CalcObject {
     
     private void updateObserves(double[] subject) {
         int objectName;
+        double[] aerv = new double[3];
+        double elv;
+        boolean ok;
+        
         for (HashMap.Entry<String, ObserveObject> obsObject : obsMap.entrySet()) {
             if (obsObject.getKey().charAt(0) != 'R') {
                 continue;
@@ -196,30 +206,119 @@ public class CalcObject {
                 }
 
                 for (Map.Entry<Double, HashMap<String, Double>> ea : a.entrySet()) {
-                    double bv[] = b.get(ea.getKey());
-                    double obsRange = ea.getValue().getOrDefault("C1", 0.0);
+                    double object[] = b.get(ea.getKey());
+                    double obsRange = ea.getValue().getOrDefault("P1", 0.0);
                     double obsSnr   = ea.getValue().getOrDefault("S1", 0.0);
-                    
-                    if (bv != null && obsRange != 0.0 && obsSnr > 30.0) {
+                    if (object != null) {
+                        ok = aerv(subject, object, aerv);
+                        elv = aerv[1] * 180.0 / Math.PI;
+//                        if (ok) {
+//                            ok = elv > 15.0;
+//                        }
+//                        else {
+//                            ok = true;
+//                        }
+                    }
+                    else {
+                        elv = 0.0;
+                        ok = false;
+                    }
+                    if (object != null && obsRange != 0.0 && obsSnr > 30.0 && elv > 15.0) {
                         
-                        double theta = -(obsRange + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
-                        double x = bv[0] * Math.cos(theta) - bv[1] * Math.sin(theta);
-                        double y = bv[0] * Math.sin(theta) + bv[1] * Math.cos(theta);
-                        double z = bv[2];
-                        double gr = Math.sqrt((subject[0] - x) * (subject[0] - x) + (subject[1] - y) * (subject[1] - y) + (subject[2] - z) * (subject[2] - z));
-                        double dr = ((subject[0] - x) * bv[3] + (subject[1] - y) * bv[4] + (subject[2] - z) * bv[5]) / GiModel.CVEL;
+                        //Sagnac
+                        double theta = -(obsRange + object[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
+                        double x = object[0] * Math.cos(theta) - object[1] * Math.sin(theta);
+                        double y = object[0] * Math.sin(theta) + object[1] * Math.cos(theta);
+                        double z = object[2];
+                        double gr = Math.sqrt(
+                                (subject[0] - x) * (subject[0] - x) + 
+                                (subject[1] - y) * (subject[1] - y) + 
+                                (subject[2] - z) * (subject[2] - z)
+                        );
+                        double dr = ((subject[0] - x) * object[3] + (subject[1] - y) * object[4] + (subject[2] - z) * object[5]) / GiModel.CVEL;
 
                         double deltaValues[] = new double[DELTA_WIDTH];
                         deltaValues[DELTA_DX] = (subject[0] - x) / gr;
                         deltaValues[DELTA_DY] = (subject[1] - y) / gr;
                         deltaValues[DELTA_DZ] = (subject[2] - z) / gr;
                         deltaValues[DELTA_DT] = 1.0;
-                        deltaValues[DELTA_DR] = obsRange + bv[GlonassSet.VectorLength] - gr - dr;// - sagnac;
+                        deltaValues[DELTA_DR] = obsRange + object[GlonassSet.VectorLength] - gr - dr;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
             }
         }
+    }
+    
+    public boolean aerv(double[] subject, double[] object, double[] aerv) {
+        double[][] m = new double[3][3];
+        double[] d = new double[3];
+        double[] dlt = new double[Math.min(Math.min(subject.length, object.length), aerv.length)];
+        double p = Math.sqrt(subject[0] * subject[0] + subject[1] * subject[1]);
+	double r = Math.sqrt(
+                subject[0] * subject[0] + 
+                subject[1] * subject[1] + 
+                subject[2] * subject[2]
+        );
+        
+        for (int i = 0; i < dlt.length; i++) {
+            dlt[i] = object[i] - subject[i];
+        }
+        
+	aerv[2] = Math.sqrt(
+                dlt[0] * dlt[0] + 
+                dlt[1] * dlt[1] + 
+                dlt[2] * dlt[2]
+        );
+
+	if (p == 0.0) {
+            return false;
+        }
+                
+	m[0][0] = -subject[1] / p;
+	m[0][1] = subject[0] / p;
+	m[0][2] = 0.0;
+	m[1][0] = -(subject[0] * subject[2] / (p * r));
+	m[1][1] = -(subject[1] * subject[2] / (p * r));
+	m[1][2] = p / r;
+	m[2][0] = subject[0] / r;
+	m[2][1] = subject[1] / r;
+	m[2][2] = subject[2] / r;
+
+	for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++) {
+                d[j] += dlt[i] * m[j][i];
+            }
+        }
+
+	double s = d[2] / Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+
+        aerv[1] = (s == 1.0) ? 0.5 * Math.PI : Math.atan(s / Math.sqrt(1.0 - s * s));
+        
+	if (d[1] == 0.0) {
+            aerv[0] = (d[0] > 0.0) ? 0.5 * Math.PI : 1.5 * Math.PI;
+            return true;
+	}
+        
+	aerv[0] = Math.atan(d[0] / d[1]);
+        
+	if (d[1] < 0.0) {
+            aerv[0] += Math.PI;
+        }
+	else {
+            if (d[0] < 0.0) {
+                aerv[0] += 2.0 * Math.PI;
+            }
+        }
+        
+        if (dlt.length >= 6) {
+            aerv[3] = (
+                    dlt[0] * dlt[3] + 
+                    dlt[1] * dlt[4] + 
+                    dlt[2] * dlt[5]) / aerv[2];
+        }
+        
+        return true;
     }
     
     public void saveDelta(String fileName) {
