@@ -30,7 +30,7 @@ public class Gnat {
         }
         
         if (hr.observeReader != null) {
-//            hr.observeReader.save();
+            hr.observeReader.save();
         }
         
         RinexReader ndr = new RinexReader();

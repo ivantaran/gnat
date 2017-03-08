@@ -23,8 +23,6 @@ import rinex.ObserveObject;
  */
 public class CalcObject {
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static double SPEED_OF_LIGHT = 299792458.0;
-    private final static double WE = 7.2921151467e-5;
     private final static int DELTA_WIDTH = 5;
     private final static int DELTA_DX = 0;
     private final static int DELTA_DY = 1;
@@ -39,7 +37,7 @@ public class CalcObject {
     private double endTime   =  900.0;
     private final GiModel model = new GiModel();
     private final double position[];// = new double[6];
-    private final HashMap<Integer, TreeMap<Double, double[]>> map = new HashMap();
+    private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
     private final HashMap<Integer, TreeMap<Double, double[]  >> delta = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
     CalcObject() {
@@ -117,11 +115,11 @@ public class CalcObject {
             GlonassSet gset = init(navData);
             double toe     = (double)navData.getTime().getTimeInMillis() * 0.001;
             double current = toe + startTime;
-            TreeMap<Double, double[]> tm = map.get(navData.getNumber());
+            TreeMap<Double, double[]> tm = navMap.get(navData.getNumber());
 
             if (tm == null) {
                 tm = new TreeMap();
-                map.put(navData.getNumber(), tm);
+                navMap.put(navData.getNumber(), tm);
             }
 
             for (double i = startTime; i < endTime; i += stepTime) {
@@ -135,7 +133,7 @@ public class CalcObject {
     private double[] getMeasureArray(GlonassNavData navData, double dt, double[] subject, double[] object) {
         double result[] = new double[GlonassSet.VectorLength + 1];
         System.arraycopy(object, 0, result, 0, GlonassSet.VectorLength);
-        result[GlonassSet.VectorLength] = (-8.055940270424e-08 + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * SPEED_OF_LIGHT - subject[3];
+        result[GlonassSet.VectorLength] = (-8.055940270424e-08 + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
         return result;
     }
     
@@ -144,7 +142,7 @@ public class CalcObject {
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
-            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : map.entrySet()) {
+            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : navMap.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                     double ds[] = entry.getValue();
                     
@@ -174,21 +172,21 @@ public class CalcObject {
     
     private void updateObserves(double[] subject) {
         int objectName;
-        for (HashMap.Entry<String, ObserveObject> entry : obsMap.entrySet()) {
-            if (entry.getKey().charAt(0) != 'R') {
+        for (HashMap.Entry<String, ObserveObject> obsObject : obsMap.entrySet()) {
+            if (obsObject.getKey().charAt(0) != 'R') {
                 continue;
             }
             
             try {
-                objectName = Integer.parseInt(entry.getKey().replaceAll("^\\D", "").trim());
+                objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
-                System.out.println(entry.getKey());
+                System.out.println(obsObject.getKey());
                 continue;
             }
             
-            TreeMap<Double, double[]> a = entry.getValue().getData();
-            TreeMap<Double, double[]> b = map.get(objectName);
+            TreeMap<Double, HashMap<String, Double>> a = obsObject.getValue().getData();
+            TreeMap<Double, double[]> b = navMap.get(objectName);
             if (a != null && b != null) {
                 
                 TreeMap<Double, double[]> deltaRecord = delta.get(objectName);
@@ -197,23 +195,26 @@ public class CalcObject {
                     delta.put(objectName, deltaRecord);
                 }
 
-                for (Map.Entry<Double, double[]> ea : a.entrySet()) {
+                for (Map.Entry<Double, HashMap<String, Double>> ea : a.entrySet()) {
                     double bv[] = b.get(ea.getKey());
-                    if (bv != null && ea.getValue()[4] != 0.0 && ea.getValue()[6] > 30.0) {
+                    double obsRange = ea.getValue().getOrDefault("C1", 0.0);
+                    double obsSnr   = ea.getValue().getOrDefault("S1", 0.0);
+                    
+                    if (bv != null && obsRange != 0.0 && obsSnr > 30.0) {
                         
-                        double theta = -(ea.getValue()[4] + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
+                        double theta = -(obsRange + bv[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
                         double x = bv[0] * Math.cos(theta) - bv[1] * Math.sin(theta);
                         double y = bv[0] * Math.sin(theta) + bv[1] * Math.cos(theta);
                         double z = bv[2];
                         double gr = Math.sqrt((subject[0] - x) * (subject[0] - x) + (subject[1] - y) * (subject[1] - y) + (subject[2] - z) * (subject[2] - z));
-                        double dr = ((subject[0] - x) * bv[3] + (subject[1] - y) * bv[4] + (subject[2] - z) * bv[5]) / SPEED_OF_LIGHT;
+                        double dr = ((subject[0] - x) * bv[3] + (subject[1] - y) * bv[4] + (subject[2] - z) * bv[5]) / GiModel.CVEL;
 
                         double deltaValues[] = new double[DELTA_WIDTH];
                         deltaValues[DELTA_DX] = (subject[0] - x) / gr;
                         deltaValues[DELTA_DY] = (subject[1] - y) / gr;
                         deltaValues[DELTA_DZ] = (subject[2] - z) / gr;
                         deltaValues[DELTA_DT] = 1.0;
-                        deltaValues[DELTA_DR] = ea.getValue()[4] + bv[GlonassSet.VectorLength] - gr - dr;// - sagnac;
+                        deltaValues[DELTA_DR] = obsRange + bv[GlonassSet.VectorLength] - gr - dr;// - sagnac;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }

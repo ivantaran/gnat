@@ -43,7 +43,7 @@ public class ObserveReader {
         if (line.length() > 25) {
             try {
                 int year = Integer.parseInt(line.substring(1, 3).trim()) + 
-                        (baseDate.get(Calendar.YEAR)/100)*100;
+                        (baseDate.get(Calendar.YEAR) / 100) * 100;
                 int month = Integer.parseInt(line.substring(4, 6).trim());
                 int day = Integer.parseInt(line.substring(7, 9).trim());
                 int hour = Integer.parseInt(line.substring(10, 12).trim());
@@ -110,11 +110,11 @@ public class ObserveReader {
                 object = getObjectList().get(name);
             }
             else {
-                object = new ObserveObject(name, typesObservations);
+                object = new ObserveObject(name);
                 getObjectList().put(name, object);
             }
             
-            object.getData().put(observeData.getTime(), observeData.getData());
+            object.putObsData(observeData.getTime(), typesObservations, observeData.getData());
         }
         
     }
@@ -132,12 +132,12 @@ public class ObserveReader {
         time = getDeltaTime(line);
         flag = getFlag(line);
         count = getObjectCount(line);
-        objectLineCount = (count - 1)/12 + 1;
+        objectLineCount = (count - 1) / 12 + 1;
         
         if (flag == FlagOk) {
             for (int j = 0; j < objectLineCount; ++j) {
                 for (int i = 0; (i < 12) && (indexObject < count); ++i, ++indexObject) {
-                    int objectNamePosition = 32 + i*3;
+                    int objectNamePosition = 32 + i * 3;
                     if (objectNamePosition + 1 < line.length()) {
                         String name = line.substring(objectNamePosition, objectNamePosition + 3);
                         newObserve(name, time);
@@ -183,20 +183,18 @@ public class ObserveReader {
         }
     }
     
-    private void parseTypesOfObserv(int index, int count) {
-        boolean result = true;
+    private void parseTypesOfObserv(int index, int count) {// TODO make return result
         int typesLineCount = (count - 1)/9 + 1;
         int indexType = 0;
         String line;
         
-        typesObservations = new String[count + 1];
-        typesObservations[0] = "Time";
+        typesObservations = new String[count];
         for (int j = 0; j < typesLineCount; ++j) {
             line = headLines.get(index + j);
             for (int i = 0; (i < 9) && (indexType < count); ++i, ++indexType) {
                 int valuePosition = 6 + 6 * i + 4;
                 String lineValue = line.substring(valuePosition, valuePosition + 2);
-                typesObservations[indexType + 1] = lineValue;
+                typesObservations[indexType] = lineValue;
             }
         }
     }

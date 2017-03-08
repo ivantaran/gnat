@@ -7,7 +7,7 @@ package rinex;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
@@ -19,46 +19,61 @@ import java.util.TreeSet;
  */
 public class ObserveObject {
     private String name;
-    private String[] types;
-    private TreeMap<Double, double[]> data = new TreeMap();
+    private final TreeMap<Double, HashMap<String, Double>> data = new TreeMap();
 
-    public ObserveObject(String name, String[] types) {
+    public ObserveObject(String name) {
         this.name = name;
-        this.types = types;
     }
     
     /**
      * @return the data
      */
-    public TreeMap<Double, double[]> getData() {
+    public TreeMap<Double, HashMap<String, Double>> getData() {
         return data;
     }
 
-    /**
-     * @param data the data to set
-     */
-    public void setData(TreeMap<Double, double[]> data) {
-        this.data = data;
+    public void putObsData(double time, String[] types, double[] obs) {
+        HashMap<String, Double> lineObs = data.getOrDefault(time, new HashMap());
+        for (int i = 0; i < Math.min(types.length, obs.length); i++) {
+            lineObs.put(types[i], obs[i]);
+        }
+        data.put(time, lineObs);
     }
     
+    /**
+     * @param fileName
+     * @param writeHeader
+     */
     public void save(String fileName, boolean writeHeader) {
         String line;
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
+
+            TreeSet<String> typesSet = new TreeSet();
+            data.entrySet().forEach((entry) -> {
+                entry.getValue().entrySet().forEach((value) -> {
+                    typesSet.add(value.getKey());
+                });
+            });
             
             if (writeHeader) {
-                line = "";
-                for (String type : types) {
-                    line += type + " ";
-                }
+                line = "Time\t";
+                line = typesSet.stream().map((type) -> type + '\t').reduce(line, String::concat);                
                 line += "\n";
                 bw.write(line);
             }
-            for (Map.Entry<Double, double[]> entry : data.entrySet()) {
+            
+            for (Map.Entry<Double, HashMap<String, Double>> entry : data.entrySet()) {
                 line = String.format("%d\t", entry.getKey().longValue());
-                for (int i = 0; i < entry.getValue().length; ++i) {
-                    line += String.format(Locale.ROOT, "%.12e\t", entry.getValue()[i]);
-                }
+                
+                line = typesSet.stream().map((type) -> 
+                        String.format(
+                                Locale.ROOT, 
+                                "%.12e\t", 
+                                entry.getValue().getOrDefault(type, 0.0)
+                        )
+                ).reduce(line, String::concat);
+                
                 line += "\n";
                 bw.write(line);
             }
@@ -74,12 +89,5 @@ public class ObserveObject {
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * @return the typeObserves
-     */
-    public String[] getTypes() {
-        return types;
     }
 }
