@@ -207,8 +207,6 @@ public class CalcObject {
                         double z = bv[2];
                         double gr = Math.sqrt((subject[0] - x) * (subject[0] - x) + (subject[1] - y) * (subject[1] - y) + (subject[2] - z) * (subject[2] - z));
                         double dr = ((subject[0] - x) * bv[3] + (subject[1] - y) * bv[4] + (subject[2] - z) * bv[5]) / SPEED_OF_LIGHT;
-//                        double sagnac = (x * subject[1] - y * subject[0]) * WE / SPEED_OF_LIGHT;
-//                        double dr = ((subject[0] - bv[0]) * bv[3] + (subject[1] - bv[1]) * bv[4] + (subject[2] - bv[2]) * bv[5]) / SPEED_OF_LIGHT;
 
                         double deltaValues[] = new double[DELTA_WIDTH];
                         deltaValues[DELTA_DX] = (subject[0] - x) / gr;
