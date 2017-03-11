@@ -10,7 +10,7 @@ public class MarquardtMin {
     private final static double EPS             = 1.0e-8;
     private final static double TOLERANCE       = 1.0e-15;
     private final static double SCALE           = 0.5 * (Math.sqrt(5.0) + 1.0);
-    private final static int    COUNT           = 100;
+    private final static int    COUNT           = 10000;
     private final static int    POSITION_SIZE   = 4;
     
 //    public enum Result { 
@@ -78,12 +78,9 @@ public class MarquardtMin {
         double fmn, fmnl, f1;
         boolean result = true;
         boolean ok;
-        int len = co.getLength();
         int k[] = new int[1];
         double lam = 1e-3;
 
-        double jcbn[][] = new double[POSITION_SIZE][len];
-        double delta[] = new double[len];
         double h[][] = new double[POSITION_SIZE][POSITION_SIZE];
         double g[][] = new double[POSITION_SIZE][1];
         double r[] = new double[POSITION_SIZE];
@@ -96,6 +93,11 @@ public class MarquardtMin {
         System.out.printf(Locale.ROOT, "sse: %f\n\n", fmn);
         
         for (i = 0; i < COUNT; i++) {
+            
+            int len = co.getLength();
+            double jcbn[][] = new double[POSITION_SIZE][len];
+            double delta[] = new double[len];
+            
             co.copyJacobianAndDelta(jcbn, delta);
             jtoa(jcbn, h, lam);
             jdfprod(jcbn, delta, g);

@@ -46,9 +46,14 @@ public class CalcObject {
 //             1448636.9300,
 //            -3385243.6700,
 //             5191046.9500,
-            -5125976.8065, 
-            2688801.6022,
-            -2669891.5334, 
+//            -5125976.8065, 
+//            2688801.6022,
+//            -2669891.5334, 
+//            2821841.0,
+//            2202230.0,
+//            5261499.0,
+//            -1224441.9824, -2689174.6494,  5633660.3762,
+            1429870.3961, -3495334.7685, -5122723.0071,
             0.0,
             0.0,
             0.0,  
@@ -107,8 +112,8 @@ public class CalcObject {
         
 //        gset.setStepTime(-navData.getTimeOffset());
 //        System.out.println(navData.getTimeOffset());
-        gset.setStepTime(0.000); //TODO correct rotation -0.07101
-        model.step(gset);
+//        gset.setStepTime(0.000); //TODO correct rotation -0.07101
+//        model.step(gset);
         
         gset.setStepTime(stepTime);
         
@@ -139,7 +144,8 @@ public class CalcObject {
     private double[] getMeasureArray(GlonassNavData navData, double dt, double[] subject, double[] object) {
         double result[] = new double[GlonassSet.VectorLength + 1];
         System.arraycopy(object, 0, result, 0, GlonassSet.VectorLength);
-        result[GlonassSet.VectorLength] = (-8.055940270424e-08 + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
+        double glotime = 0.0; //TODO read from obs file
+        result[GlonassSet.VectorLength] = (glotime + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
         return result;
     }
     
@@ -181,6 +187,8 @@ public class CalcObject {
         double[] aerv = new double[3];
         double elv;
         boolean ok;
+        
+        delta.clear();
         
         for (HashMap.Entry<String, ObserveObject> obsObject : obsMap.entrySet()) {
             if (obsObject.getKey().charAt(0) != 'R') {
@@ -372,7 +380,6 @@ public class CalcObject {
     
     public void copyJacobianAndDelta(double jacobian[][], double delta[]) {
         int i = 0;
-        
         for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : this.delta.entrySet()) {
             for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                 jacobian[0][i] = entry.getValue()[DELTA_DX];

@@ -120,21 +120,22 @@ public class ObserveReader {
     }
     
     private void readObservesHeader() {
-        double time = 0;
-        int flag = 0;
-        int count = 0;
-        int objectLineCount = 0;
+        double time;
+        int flag;
+        int count;
+        int objectLineCount;
         int indexObject = 0;
         
         observe.clear();
         
         String line = getLine();
-        time = getDeltaTime(line);
         flag = getFlag(line);
-        count = getObjectCount(line);
-        objectLineCount = (count - 1) / 12 + 1;
         
         if (flag == FlagOk) {
+            time = getDeltaTime(line);
+            count = getObjectCount(line);
+            objectLineCount = (count - 1) / 12 + 1;
+            
             for (int j = 0; j < objectLineCount; ++j) {
                 for (int i = 0; (i < 12) && (indexObject < count); ++i, ++indexObject) {
                     int objectNamePosition = 32 + i * 3;
@@ -172,10 +173,10 @@ public class ObserveReader {
                     int valuePosition = 16 * i;
                     if (valuePosition + 12 < line.length()) {
                         String lineValue = line.substring(valuePosition, valuePosition + 14).trim();
-                        value = (lineValue.isEmpty()) ? 0 : Double.valueOf(lineValue);
+                        value = (lineValue.isEmpty()) ? 0.0 : Double.valueOf(lineValue);
                     }
                     else {
-                        value = 0;
+                        value = 0.0;
                     }
                     data.getData()[indexObserve] = value;
                 }
