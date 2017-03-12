@@ -5,7 +5,6 @@
 package gnat;
 
 import java.io.File;
-import rinex.GlonassNavData;
 import rinex.RinexReader;
 
 /**
@@ -19,25 +18,25 @@ public class Gnat {
      */
     public static void main(String[] args) {
         File flist[];
-        RinexReader hr = new RinexReader();
+        RinexReader obs = new RinexReader();
         
-//        flist = (new File("e:\\data\\rnx\\6\\L1\\17o")).listFiles();
-        flist = (new File("e:\\data\\rnx\\5\\obs")).listFiles();
+        flist = (new File("e:\\data\\rnx\\6\\L1\\17o")).listFiles();
+//        flist = (new File("e:\\data\\rnx\\2\\obs")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
-                hr.open(f.getAbsolutePath());
-                System.out.println(hr.getErrorMessasge());
+                obs.open(f.getAbsolutePath());
+                System.out.println(obs.getErrorMessasge());
             }
         }
         
-        if (hr.observeReader != null) {
-            hr.observeReader.save();
+        if (obs.observeReader != null) {
+            obs.observeReader.save();
         }
         
         RinexReader ndr = new RinexReader();
 
-//        flist = (new File("e:\\data\\rnx\\6\\L1\\17g")).listFiles();
-        flist = (new File("e:\\data\\rnx\\5\\nav")).listFiles();
+        flist = (new File("e:\\data\\rnx\\6\\L1\\17g")).listFiles();
+//        flist = (new File("e:\\data\\rnx\\2\\nav")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
                 ndr.open(f.getAbsolutePath());
@@ -51,7 +50,8 @@ public class Gnat {
         co.addGlonassNavDataList(ndr.gnd_tmp.getNavDataList());
         
 //        co.save("co.txt");
-        co.addObservesMap(hr.observeReader.getObjectList());
+        co.setPositionXyz(obs.observeReader.getApproxPositionXyz());
+        co.addObservesMap(obs.observeReader.getObjectMap());
         co.saveDelta("delta.txt");
         MarquardtMin mm = new MarquardtMin();
         mm.exec(co);

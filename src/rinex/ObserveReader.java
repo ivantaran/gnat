@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
@@ -19,7 +18,7 @@ public class ObserveReader {
     public static final int FLAG_OK = 0;
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
-    private final HashMap<String, ObserveObject> objectList = new HashMap();
+    private final HashMap<String, ObserveObject> objectMap = new HashMap();
     private Calendar baseDate = new GregorianCalendar();
     private double baseFracSecond = 0;
     private int lineIndex = 0;
@@ -78,6 +77,21 @@ public class ObserveReader {
     public String getMarkerName() {
         return markerName;
     }
+
+    /**
+     * @param markerName the markerName to set
+     */
+    private void setMarkerName(String markerName) {
+        if (!this.markerName.equalsIgnoreCase(markerName)) {
+            this.markerName = markerName;
+            if (!objectMap.isEmpty()) {
+                warning(markerName);
+                warning("Marker name is changed. All observes will be dropped.");
+                objectMap.clear();
+            }
+        }
+    }
+
     
     /**
      * @return the approxPositionXyz
@@ -126,12 +140,12 @@ public class ObserveReader {
         for (ObserveSample observeData : observe) {
             String name = observeData.getName();
 
-            if (getObjectList().containsKey(name)) {
-                object = getObjectList().get(name);
+            if (getObjectMap().containsKey(name)) {
+                object = getObjectMap().get(name);
             }
             else {
                 object = new ObserveObject(name);
-                getObjectList().put(name, object);
+                getObjectMap().put(name, object);
             }
             
             object.putObsData(observeData.getTime(), typesObservations, observeData.getData());
@@ -297,7 +311,7 @@ public class ObserveReader {
             index = RinexReader.getMarkerIndex(RinexReader.MARKER_NAME, headLines);
             if (index > -1) {
                 line = headLines.get(index);
-                markerName = line.substring(0, 60).trim();
+                setMarkerName(line.substring(0, 60).trim());
             }
             else {
                 warning("MARKER_NAME not found");
@@ -362,17 +376,17 @@ public class ObserveReader {
     }
     
     public void save() {
-        for (Map.Entry<String, ObserveObject> entry : getObjectList().entrySet()) {
+        getObjectMap().entrySet().forEach((entry) -> {
             String string = entry.getKey();
             ObserveObject observeObject = entry.getValue();
             observeObject.save(string + ".txt", true);
-        }
+        });
     }
 
     /**
-     * @return the objectList
+     * @return the objectMap
      */
-    public HashMap<String, ObserveObject> getObjectList() {
-        return objectList;
+    public HashMap<String, ObserveObject> getObjectMap() {
+        return objectMap;
     }
 }

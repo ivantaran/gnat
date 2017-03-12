@@ -36,24 +36,16 @@ public class CalcObject {
     private double startTime = -900.0;
     private double endTime   =  900.0;
     private final GiModel model = new GiModel();
-    private final double position[];// = new double[6];
+    private final double position[];
     private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
     private final HashMap<Integer, TreeMap<Double, double[]  >> delta = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
+    
     CalcObject() {
-        //55.753649, 37.754987
         position = new double[] {
-//             1448636.9300,
-//            -3385243.6700,
-//             5191046.9500,
-//            -5125976.8065, 
-//            2688801.6022,
-//            -2669891.5334, 
 //            2821841.0,
 //            2202230.0,
 //            5261499.0,
-//            -1224441.9824, -2689174.6494,  5633660.3762,
-            1429870.3961, -3495334.7685, -5122723.0071,
             0.0,
             0.0,
             0.0,  
@@ -62,6 +54,12 @@ public class CalcObject {
             0.0,  
             0.0
         };
+    }
+    
+    public void setPositionXyz(double[] xyz) {
+        position[0] = xyz[0];
+        position[1] = xyz[1];
+        position[2] = xyz[2];
     }
     
     public double[] getPosition() {
