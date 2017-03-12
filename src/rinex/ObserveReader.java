@@ -15,7 +15,8 @@ import java.util.Map;
  * @author Ivan
  */
 public class ObserveReader {
-    public static final int FlagOk = 0;
+
+    public static final int FLAG_OK = 0;
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
     private final HashMap<String, ObserveObject> objectList = new HashMap();
@@ -26,6 +27,8 @@ public class ObserveReader {
     private int observeTypeCount = 0;
     private String[] typesObservations;
     private int leapSeconds = 0;
+    private final double[] approxPositionXyz = {0.0, 0.0, 0.0};
+    private String markerName = "";
     
     ObserveReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
         add(headLines, dataLines);
@@ -68,7 +71,24 @@ public class ObserveReader {
         
         return result;
     }
+
+    /**
+     * @return the markerName
+     */
+    public String getMarkerName() {
+        return markerName;
+    }
     
+    /**
+     * @return the approxPositionXyz
+     */
+    public double[] getApproxPositionXyz() {
+        return approxPositionXyz;
+    }
+    
+    /**
+     * @return the flag
+     */
     private int getFlag(String line) {
         int result = -1;
         
@@ -131,7 +151,7 @@ public class ObserveReader {
         String line = getLine();
         flag = getFlag(line);
         
-        if (flag == FlagOk) {
+        if (flag == FLAG_OK) {
             time = getDeltaTime(line);
             count = getObjectCount(line);
             objectLineCount = (count - 1) / 12 + 1;
@@ -205,11 +225,11 @@ public class ObserveReader {
         int index;
         String line;
 
-        index = RinexReader.getMarkerIndex(RinexReader.MarkerTypesOfObserv, headLines);
+        index = RinexReader.getMarkerIndex(RinexReader.MARKER_TYPES_OF_OBSERV, headLines);
         if (index > -1) {
             line = headLines.get(index);
             try {
-                observeTypeCount = Integer.parseInt(line.substring(0, 7).trim());
+                observeTypeCount = Integer.parseInt(line.substring(0, 6).trim());
                 result = (observeTypeCount > 0);
                 if (result) {
                     parseTypesOfObserv(index, observeTypeCount);
@@ -222,19 +242,19 @@ public class ObserveReader {
             }
         }
         else {
-            warning("MarkerTypesOfObserv not found");
+            warning("MARKER_TYPES_OF_OBSERV not found");
             result = false;
         }
         
         if (result) {
-            index = RinexReader.getMarkerIndex(RinexReader.MarkerTimeOfFirstObs, headLines);
+            index = RinexReader.getMarkerIndex(RinexReader.MARKER_TIME_OF_FIRST_OBS, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 try {
-                    int year = Integer.parseInt(line.substring(0, 6).trim());
-                    int month = Integer.parseInt(line.substring(6, 12).trim());
-                    int day = Integer.parseInt(line.substring(12, 18).trim());
-                    int hour = Integer.parseInt(line.substring(18, 24).trim());
+                    int year  = Integer.parseInt(line.substring( 0,  6).trim());
+                    int month = Integer.parseInt(line.substring( 6, 12).trim());
+                    int day   = Integer.parseInt(line.substring(12, 18).trim());
+                    int hour  = Integer.parseInt(line.substring(18, 24).trim());
                     //check rinex manual
                     int minute = Integer.parseInt(line.substring(24, 30).trim());
                     baseFracSecond = Double.parseDouble(line.substring(30, 43).trim());
@@ -251,11 +271,11 @@ public class ObserveReader {
                 }
             }
             else {
-                warning("MarkerTimeOfFirstObs not found");
+                warning("MARKER_TIME_OF_FIRST_OBS not found");
                 result = false;
             }
             
-            index = RinexReader.getMarkerIndex(RinexReader.MarkerLeapSeconds, headLines);
+            index = RinexReader.getMarkerIndex(RinexReader.MARKER_LEAP_SECONDS, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 try {
@@ -270,6 +290,39 @@ public class ObserveReader {
             }
             else {
                 leapSeconds = 0;
+            } 
+        }
+        
+        if (result) {
+            index = RinexReader.getMarkerIndex(RinexReader.MARKER_NAME, headLines);
+            if (index > -1) {
+                line = headLines.get(index);
+                markerName = line.substring(0, 60).trim();
+            }
+            else {
+                warning("MARKER_NAME not found");
+                result = false;
+            }
+        }
+        
+        if (result) {
+            index = RinexReader.getMarkerIndex(RinexReader.MARKER_APPROX_POSITION_XYZ, headLines);
+            if (index > -1) {
+                line = headLines.get(index);
+                try {
+                    approxPositionXyz[0] = Double.parseDouble(line.substring( 0, 14));
+                    approxPositionXyz[1] = Double.parseDouble(line.substring(14, 28));
+                    approxPositionXyz[2] = Double.parseDouble(line.substring(28, 42));
+                } catch (NumberFormatException e) {
+                    warning(String.format("NumberFormatException at header line %d", index));
+                    warning(line);
+                    warning(e.getMessage());
+                    result = false;
+                }
+            }
+            else {
+                warning("MARKER_APPROX_POSITION_XYZ not found");
+                result = false;
             }
         }
         

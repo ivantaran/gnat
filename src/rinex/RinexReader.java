@@ -15,29 +15,31 @@ import java.util.Iterator;
  * @author Ivan
  */
 public class RinexReader {
-    public static final int RinexVersion = 0;
-    public static final int MinimumLineLength = 61;
-    public static final int MarkerLineIndex = 60;
+    public static final int RINEX_VERSION       = 0;
+    public static final int MINIMUM_LINE_LENGTH = 61;
+    public static final int MARKER_LINE_INDEX   = 60;
 
-    public static final String MarkerRinexVersion = "RINEX VERSION / TYPE";
-    public static final String MarkerTypesOfObserv = "# / TYPES OF OBSERV";
-    public static final String MarkerTimeOfFirstObs =  "TIME OF FIRST OBS";
-    public static final String MarkerEndOfHeader = "END OF HEADER";
-    public static final String MarkerComment = "COMMENT";
-    public static final String MarkerLeapSeconds =  "LEAP SECONDS";
+    public static final String MARKER_RINEX_VERSION         = "RINEX VERSION / TYPE";
+    public static final String MARKER_TYPES_OF_OBSERV       = "# / TYPES OF OBSERV";
+    public static final String MARKER_TIME_OF_FIRST_OBS     = "TIME OF FIRST OBS";
+    public static final String MARKER_END_OF_HEADER         = "END OF HEADER";
+    public static final String MARKER_COMMENT               = "COMMENT";
+    public static final String MARKER_LEAP_SECONDS          = "LEAP SECONDS";
+    public static final String MARKER_APPROX_POSITION_XYZ   = "APPROX POSITION XYZ";
+    public static final String MARKER_NAME                  = "MARKER NAME";
     
     public GlonassNavDataReader gnd_tmp;
     public ObserveReader observeReader;
-    private double [] version_list;
-    private char [] type_list;
-    private char [] system_list;
+    private final double [] version_list;
+    private final char [] type_list;
+    private final char [] system_list;
     private char type = ' ';
     private String errorMessasge = "";
     private String warningMessasge = "";
 
     private static enum ErrorCodes {Success, Line1Length, MarkerVersionType, Version, Type, System, Unknown};
-    private ArrayList<String> headLines = new ArrayList();
-    private ArrayList<String> dataLines = new ArrayList();
+    private final ArrayList<String> headLines = new ArrayList();
+    private final ArrayList<String> dataLines = new ArrayList();
     private int lineIndex;
     private ErrorCodes errorCode;
     
@@ -71,7 +73,7 @@ public class RinexReader {
         
         while (it.hasNext() && !result) {
             String line = it.next();
-            int pos = line.indexOf(marker, RinexReader.MarkerLineIndex);
+            int pos = line.indexOf(marker, RinexReader.MARKER_LINE_INDEX);
             result = (pos > -1);
             index++;
         }
@@ -91,7 +93,7 @@ public class RinexReader {
     }
     
     private boolean checkMarkerRinexVersion(String line) {
-        boolean result = (line.indexOf(MarkerRinexVersion, lineIndex) > -1);
+        boolean result = (line.indexOf(MARKER_RINEX_VERSION, lineIndex) > -1);
 
         if (!result) {
             setError(ErrorCodes.MarkerVersionType);
@@ -154,7 +156,7 @@ public class RinexReader {
     
     private boolean checkLine1(String line) {
         
-        boolean result = (line.length() > MinimumLineLength);
+        boolean result = (line.length() > MINIMUM_LINE_LENGTH);
         
         if (result) {
             result = checkMarkerRinexVersion(line);
@@ -201,10 +203,10 @@ public class RinexReader {
                 while (br.ready() && result && !eoh) {
                     line = br.readLine();
                     lineIndex++;
-                    result = (line.length() > MinimumLineLength);
+                    result = (line.length() > MINIMUM_LINE_LENGTH);
                     
                     if (result) {
-                        eoh = (line.indexOf(MarkerEndOfHeader, MarkerLineIndex) > -1);
+                        eoh = (line.indexOf(MARKER_END_OF_HEADER, MARKER_LINE_INDEX) > -1);
                         if (!eoh) {
                             headLines.add(line);
                         }
@@ -214,7 +216,7 @@ public class RinexReader {
                     line = br.readLine();
                     lineIndex++;
                     //TODO MarkerComment to dataLines 
-                    if (line.indexOf(MarkerComment, MarkerLineIndex) < 0) {
+                    if (line.indexOf(MARKER_COMMENT, MARKER_LINE_INDEX) < 0) {
                         dataLines.add(line);
                     }
                 }
