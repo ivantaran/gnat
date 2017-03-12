@@ -33,21 +33,20 @@ public class Gnat {
             obs.observeReader.save();
         }
         
-        RinexReader ndr = new RinexReader();
+        RinexReader nav = new RinexReader();
 
         flist = (new File("e:\\data\\rnx\\6\\L1\\17g")).listFiles();
 //        flist = (new File("e:\\data\\rnx\\2\\nav")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
-                ndr.open(f.getAbsolutePath());
-                System.out.println(ndr.getErrorMessasge());
+                nav.open(f.getAbsolutePath());
+                System.out.println(nav.getErrorMessasge());
             }
         }
-    
 //        ndr.gnd_tmp.save();
         
         CalcObject co = new CalcObject();
-        co.addGlonassNavDataList(ndr.gnd_tmp.getNavDataList());
+        co.addGlonassNavDataList(nav.gnd_tmp.getNavDataList());
         
 //        co.save("co.txt");
         co.setPositionXyz(obs.observeReader.getApproxPositionXyz());
@@ -56,5 +55,6 @@ public class Gnat {
         MarquardtMin mm = new MarquardtMin();
         mm.exec(co);
         co.saveDelta("delta1.txt");
+//    http://pastebin.com/mgcv1FpA
     }
 }
