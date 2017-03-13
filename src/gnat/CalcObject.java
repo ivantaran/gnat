@@ -38,7 +38,7 @@ public class CalcObject {
     private final GiModel model = new GiModel();
     private final double position[];
     private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
-    private final HashMap<Integer, TreeMap<Double, double[]  >> delta = new HashMap();
+    private final HashMap<Integer, TreeMap<Double, double[]>> delta  = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
     
     CalcObject() {
@@ -328,14 +328,11 @@ public class CalcObject {
     }
     
     public void saveDelta(String fileName) {
-        String line;
-
-        try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false))) {
             for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                     
-                    line = String.format(Locale.ROOT, "%d\t%d\t%.12e\n", 
+                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\n", 
                             tm.getKey(), 
                             entry.getKey().longValue(), 
                             entry.getValue()[DELTA_DR]
@@ -351,7 +348,8 @@ public class CalcObject {
     
     public int getLength() {
         int value = 0;
-        value = delta.entrySet().stream().map((tm) -> tm.getValue().size()).reduce(value, Integer::sum);
+        value = delta.entrySet().stream().map((tm) -> 
+                tm.getValue().size()).reduce(value, Integer::sum);
         return value;
     }
     
