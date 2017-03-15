@@ -23,12 +23,28 @@ import rinex.ObserveObject;
  */
 public class CalcObject {
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static int DELTA_WIDTH = 5;
-    private final static int DELTA_DX = 0;
-    private final static int DELTA_DY = 1;
-    private final static int DELTA_DZ = 2;
-    private final static int DELTA_DT = 3;
-    private final static int DELTA_DR = 4;
+    private final static int DELTA_WIDTH = 9;
+    private final static int DELTA_DX   = 0;
+    private final static int DELTA_DY   = 1;
+    private final static int DELTA_DZ   = 2;
+    private final static int DELTA_DT   = 3;
+    private final static int DELTA_DR   = 4;
+    private final static int DELTA_MP1  = 5;
+    private final static int DELTA_MP2  = 6;
+    private final static int DELTA_IONP = 7;
+    private final static int DELTA_IONL = 8;
+    
+    private final static int NAVMAP_WIDTH = 10;
+    private final static int NAVMAP_X   = 0;
+    private final static int NAVMAP_Y   = 1;
+    private final static int NAVMAP_Z   = 2;
+    private final static int NAVMAP_VX  = 3;
+    private final static int NAVMAP_VY  = 4;
+    private final static int NAVMAP_VZ  = 5;
+    private final static int NAVMAP_T   = 6;
+    private final static int NAVMAP_L1  = 7;
+    private final static int NAVMAP_L2  = 8;
+    private final static int NAVMAP_L3  = 9;
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
@@ -140,10 +156,13 @@ public class CalcObject {
     }
     
     private double[] getMeasureArray(GlonassNavData navData, double dt, double[] subject, double[] object) {
-        double result[] = new double[GlonassSet.VectorLength + 1];
+        double result[] = new double[NAVMAP_WIDTH];
         System.arraycopy(object, 0, result, 0, GlonassSet.VectorLength);
         double glotime = 0.0; //TODO read from obs file
-        result[GlonassSet.VectorLength] = (glotime + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
+        result[NAVMAP_T] = (glotime + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
+        result[NAVMAP_L1] = navData.getFrequencyL1() * navData.getFrequencyOffset() + navData.getFrequencyL1();
+        result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
+        result[NAVMAP_L3] = navData.getFrequencyL3() * navData.getFrequencyOffset() + navData.getFrequencyL3();
         return result;
     }
     
@@ -213,42 +232,60 @@ public class CalcObject {
 
                 for (Map.Entry<Double, HashMap<String, Double>> ea : a.entrySet()) {
                     double object[] = b.get(ea.getKey());
-                    double obsRange = ea.getValue().getOrDefault("P1", 0.0);
-                    double obsSnr   = ea.getValue().getOrDefault("S1", 0.0);
-                    if (object != null) {
-                        ok = aerv(subject, object, aerv);
-                        elv = aerv[1] * 180.0 / Math.PI;
+                    
+                    if (object == null) {
+                        continue;
+                    }
+                    
+                    double obsP1    = ea.getValue().getOrDefault("P1", 0.0);
+                    double obsL1    = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
+                    double obsSnr1  = ea.getValue().getOrDefault("S1", 0.0);
+                    double obsP2    = ea.getValue().getOrDefault("P2", 0.0);
+                    double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
+                    double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
+                    double snr      = Math.min(obsSnr1, obsSnr2);
+                    double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
+                    double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
+                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+                    double ionl     = obsL1 - obsL2;
+                    double ionp     = obsP2 - obsP1;
+                    double mp1      = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
+                    double mp2      = obsP2 - obsL2 + 2.0 * ionl * f1q / (f2q - f1q);
+                    ok = aerv(subject, object, aerv);
+                    elv = aerv[1] * 180.0 / Math.PI;
 //                        if (ok) {
 //                            ok = elv > 15.0;
 //                        }
 //                        else {
 //                            ok = true;
 //                        }
-                    }
-                    else {
-                        elv = 0.0;
-                        ok = false;
-                    }
-                    if (object != null && obsRange != 0.0 && obsSnr > 30.0 && elv > 15.0) {
+                    if (range != 0.0 && snr > 30.0 && elv > 15.0) {
                         
                         //Sagnac
-                        double theta = -(obsRange + object[GlonassSet.VectorLength]) * GiModel.WE / GiModel.CVEL;
-                        double x = object[0] * Math.cos(theta) - object[1] * Math.sin(theta);
-                        double y = object[0] * Math.sin(theta) + object[1] * Math.cos(theta);
-                        double z = object[2];
+                        double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
+                        double x = object[NAVMAP_X] * Math.cos(theta) - object[NAVMAP_Y] * Math.sin(theta);
+                        double y = object[NAVMAP_X] * Math.sin(theta) + object[NAVMAP_Y] * Math.cos(theta);
+                        double z = object[NAVMAP_Z];
                         double gr = Math.sqrt(
                                 (subject[0] - x) * (subject[0] - x) + 
                                 (subject[1] - y) * (subject[1] - y) + 
                                 (subject[2] - z) * (subject[2] - z)
                         );
-                        double dr = ((subject[0] - x) * object[3] + (subject[1] - y) * object[4] + (subject[2] - z) * object[5]) / GiModel.CVEL;
+                        double dr = (
+                                (subject[0] - x) * object[NAVMAP_VX] + 
+                                (subject[1] - y) * object[NAVMAP_VY] + 
+                                (subject[2] - z) * object[NAVMAP_VZ]) / GiModel.CVEL;
 
                         double deltaValues[] = new double[DELTA_WIDTH];
                         deltaValues[DELTA_DX] = (subject[0] - x) / gr;
                         deltaValues[DELTA_DY] = (subject[1] - y) / gr;
                         deltaValues[DELTA_DZ] = (subject[2] - z) / gr;
                         deltaValues[DELTA_DT] = 1.0;
-                        deltaValues[DELTA_DR] = obsRange + object[GlonassSet.VectorLength] - gr - dr;
+                        deltaValues[DELTA_DR] = range + object[NAVMAP_T] - gr - dr;
+                        deltaValues[DELTA_MP1] = mp1;
+                        deltaValues[DELTA_MP2] = mp2;
+                        deltaValues[DELTA_IONP] = ionp;
+                        deltaValues[DELTA_IONL] = ionl;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
@@ -332,10 +369,14 @@ public class CalcObject {
             for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                     
-                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\n", 
+                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
                             tm.getKey(), 
                             entry.getKey().longValue(), 
-                            entry.getValue()[DELTA_DR]
+                            entry.getValue()[DELTA_DR], 
+                            entry.getValue()[DELTA_MP1], 
+                            entry.getValue()[DELTA_MP2],
+                            entry.getValue()[DELTA_IONP], 
+                            entry.getValue()[DELTA_IONL]
                     );
                     bw.write(line);
                 }
