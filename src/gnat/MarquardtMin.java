@@ -13,35 +13,6 @@ public class MarquardtMin {
     private final static int    COUNT           = 10000;
     private final static int    POSITION_SIZE   = 4;
     
-//    public enum Result { 
-//        MAR_OK(0), MAR_FAIL(1); 
-//        
-//        private final int value;
-//        
-//        private Result(int value) {
-//            this.value = value;
-//        }
-//    }
-
-//    int value, ok;
-//    double scale = 0.5*(sqrt(5) + 1);
-//    double **hi = (double **)mtx_create(s->n, s->n);
-//    double **jcbn = (double **)mtx_create(s->n, s->len);
-
-//    struct minmarset {
-//        double *dx;
-//        double *x;
-//        double *data;
-//        int len;
-//        double xmean;
-//        double xstd;
-//        int n;
-//        double fmin;
-//        double eps;
-//        double count;
-//        double (*fnc)(double* args, double t, int n);
-//    };
-
     private void jdfprod(double jcbn[][], double delta[], double jdf[][]) {
         for (int i = 0; i < POSITION_SIZE; i++) {
             jdf[i][0] = 0;
@@ -146,9 +117,16 @@ public class MarquardtMin {
         System.out.println("");
         System.out.printf(Locale.ROOT, "sse[%d]: %f\n\n", i, fmnl);
         
+        double lla[] = {0.0, 0.0, 0.0};
+        
+        NavUtils.ecefToLla(x, lla);
         for (int j = 0; j < POSITION_SIZE; j++) {
             System.out.println(x[j]);
         }
+        System.out.println();
+        System.out.println(lla[0] * 180.0 / Math.PI);
+        System.out.println(lla[1] * 180.0 / Math.PI);
+        System.out.println(lla[2]);
         
         return result;
     }
