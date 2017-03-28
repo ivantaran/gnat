@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Locale;
 
 /**
  *
@@ -190,6 +191,7 @@ public class ObserveReader {
             }
         }
         else {
+//            System.out.printf("flag: %d\n", flag);
             //TODO write all flags
         }
     }
@@ -197,21 +199,47 @@ public class ObserveReader {
     private void readObservations() {
         int observeLineCount = (observeTypeCount - 1)/5 + 1;
         int indexObserve;
+        int valuePosition;
+        String lineValue;
         double value;
+        int lli, ps; // TODO use lli and ps
         
         for (ObserveSample data : observe) {
             indexObserve = 0;
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
                 for (int i = 0; (i < 5) && (indexObserve < observeTypeCount); ++i, ++indexObserve) {
-                    int valuePosition = 16 * i;
-                    if (valuePosition + 12 < line.length()) {
-                        String lineValue = line.substring(valuePosition, valuePosition + 14).trim();
+                    valuePosition = 16 * i;
+                    if (valuePosition + 14 <= line.length()) { //TODO check +14 value
+                        lineValue = line.substring(valuePosition, valuePosition + 14).trim();
                         value = (lineValue.isEmpty()) ? 0.0 : Double.valueOf(lineValue);
                     }
                     else {
                         value = 0.0;
                     }
+
+                    valuePosition += 14;
+                    if (valuePosition + 1 <= line.length()) {
+                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                        lli = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
+                    }
+                    else {
+                        lli = 0;
+                    }
+                    
+                    valuePosition += 1;
+                    if (valuePosition + 1 <= line.length()) {
+                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                        ps = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
+                    }
+                    else {
+                        ps = 0;
+                    }
+                    
+//                    if (lli != 0) {
+//                        System.out.printf(Locale.ROOT, "lli[%.3f]: %d\n", value, lli);
+//                    }
+                    
                     data.getData()[indexObserve] = value;
                 }
             }
@@ -219,7 +247,7 @@ public class ObserveReader {
     }
     
     private void parseTypesOfObserv(int index, int count) {// TODO make return result
-        int typesLineCount = (count - 1)/9 + 1;
+        int typesLineCount = (count - 1) / 9 + 1;
         int indexType = 0;
         String line;
         

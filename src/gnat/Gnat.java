@@ -20,8 +20,8 @@ public class Gnat {
         File flist[];
         RinexReader obs = new RinexReader();
         
-//        flist = (new File("e:\\data\\rnx\\1\\obs")).listFiles();
-        flist = (new File("e:\\data\\rnx\\7\\17o")).listFiles();
+//        flist = (new File("e:\\data\\rnx\\5\\obs")).listFiles();
+        flist = (new File("e:\\data\\rnx\\8\\17o")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
                 obs.open(f.getAbsolutePath());
@@ -35,8 +35,8 @@ public class Gnat {
         
         RinexReader nav = new RinexReader();
 
-//        flist = (new File("e:\\data\\rnx\\1\\nav")).listFiles();
-        flist = (new File("e:\\data\\rnx\\7\\17g")).listFiles();
+//        flist = (new File("e:\\data\\rnx\\5\\nav")).listFiles();
+        flist = (new File("e:\\data\\rnx\\8\\17g")).listFiles();
         for (File f : flist) {
             if (f.isFile() && f.canRead()) {
                 nav.open(f.getAbsolutePath());

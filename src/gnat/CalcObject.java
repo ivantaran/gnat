@@ -214,6 +214,7 @@ public class CalcObject {
             
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
+//                if (objectName != 17) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
@@ -246,7 +247,7 @@ public class CalcObject {
                     double snr      = Math.min(obsSnr1, obsSnr2);
                     double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
                     double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
-                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+                    double range    = obsP2;//(obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                     double ionl     = obsL1 - obsL2;
                     double ionp     = obsP2 - obsP1;
                     double mp1      = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
@@ -258,7 +259,7 @@ public class CalcObject {
 //                        }
 //                        else {
 //                            ok = true;
-//                        }
+//                        } 
                     if (range != 0.0 && snr > 30.0 && elv > 15.0) {
                         
                         //Sagnac
@@ -284,8 +285,8 @@ public class CalcObject {
                         deltaValues[DELTA_DR] = range + object[NAVMAP_T] - gr - dr;
                         deltaValues[DELTA_MP1] = mp1;
                         deltaValues[DELTA_MP2] = mp2;
-                        deltaValues[DELTA_IONP] = ionp;
-                        deltaValues[DELTA_IONL] = ionl;
+                        deltaValues[DELTA_IONP] = (range + object[NAVMAP_T]);//ionp;
+                        deltaValues[DELTA_IONL] = (gr + dr);//ionl;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }

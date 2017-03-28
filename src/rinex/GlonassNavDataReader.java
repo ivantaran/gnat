@@ -64,7 +64,6 @@ public class GlonassNavDataReader {
         /* line 1 */
         line = getLine();
         line = line.replace('D', 'E');
-        String ss = line.substring(0, 2);
         gnd.setNumber(Integer.parseInt(line.substring(0, 2).trim()));
         gnd.setTime(getTime(line.substring(3, line.length())));
         gnd.setTimeOffset(Double.parseDouble(line.substring(22, 41).trim()));
