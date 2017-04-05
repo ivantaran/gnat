@@ -5,6 +5,12 @@
 package gnat;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rinex.RinexReader;
 
 /**
@@ -17,40 +23,34 @@ public class Gnat {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        File flist[];
-        RinexReader obs = new RinexReader();
         
-//        flist = (new File("e:\\data\\rnx\\5\\obs")).listFiles();
-        flist = (new File("e:\\data\\rnx\\8\\17o")).listFiles();
-        for (File f : flist) {
-            if (f.isFile() && f.canRead()) {
-                obs.open(f.getAbsolutePath());
-                System.out.println(obs.getErrorMessasge());
-            }
+        RinexReader rnx = new RinexReader();
+        
+        try {
+            Files.walk(Paths.get("e:\\data\\rnx\\1\\"))
+                    .filter(path -> 
+                            Files.isRegularFile(path) && Files.isReadable(path)
+                    )
+                    .forEach(path -> {
+                        rnx.open(path.toAbsolutePath().toString());
+                        System.out.println(rnx.getErrorMessasge());
+                    });
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
         
-        if (obs.observeReader != null) {
-            obs.observeReader.save();
+        if (rnx.observeReader != null) {
+            rnx.observeReader.save();
         }
         
-        RinexReader nav = new RinexReader();
-
-//        flist = (new File("e:\\data\\rnx\\5\\nav")).listFiles();
-        flist = (new File("e:\\data\\rnx\\8\\17g")).listFiles();
-        for (File f : flist) {
-            if (f.isFile() && f.canRead()) {
-                nav.open(f.getAbsolutePath());
-                System.out.println(nav.getErrorMessasge());
-            }
-        }
-//        ndr.gnd_tmp.save();
+        rnx.gnd_tmp.save();
         
         CalcObject co = new CalcObject();
-        co.addGlonassNavDataList(nav.gnd_tmp.getNavDataList());
+        co.addGlonassNavDataList(rnx.gnd_tmp.getNavDataList());
         
 //        co.save("co.txt");
-        co.setPositionXyz(obs.observeReader.getApproxPositionXyz());
-        co.addObservesMap(obs.observeReader.getObjectMap());
+        co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
+        co.addObservesMap(rnx.observeReader.getObjectMap());
         co.saveDelta("delta.txt");
         MarquardtMin mm = new MarquardtMin();
         mm.exec(co);

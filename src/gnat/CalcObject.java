@@ -247,19 +247,22 @@ public class CalcObject {
                     double snr      = Math.min(obsSnr1, obsSnr2);
                     double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
                     double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
-                    double range    = obsP2;//(obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                     double ionl     = obsL1 - obsL2;
                     double ionp     = obsP2 - obsP1;
                     double mp1      = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
                     double mp2      = obsP2 - obsL2 + 2.0 * ionl * f1q / (f2q - f1q);
+                    
                     ok = aerv(subject, object, aerv);
                     elv = aerv[1] * 180.0 / Math.PI;
+
 //                        if (ok) {
 //                            ok = elv > 15.0;
 //                        }
 //                        else {
 //                            ok = true;
 //                        } 
+
                     if (range != 0.0 && snr > 30.0 && elv > 15.0) {
                         
                         //Sagnac
@@ -285,8 +288,8 @@ public class CalcObject {
                         deltaValues[DELTA_DR] = range + object[NAVMAP_T] - gr - dr;
                         deltaValues[DELTA_MP1] = mp1;
                         deltaValues[DELTA_MP2] = mp2;
-                        deltaValues[DELTA_IONP] = (range + object[NAVMAP_T]);//ionp;
-                        deltaValues[DELTA_IONL] = (gr + dr);//ionl;
+                        deltaValues[DELTA_IONP] = ionp;
+                        deltaValues[DELTA_IONL] = ionl;
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
@@ -365,7 +368,50 @@ public class CalcObject {
         return true;
     }
     
+    private void dropDeltaOffsets() {
+//                tm.getKey(),
+//                entry.getKey().longValue(),
+        delta.entrySet().forEach((tm) -> {
+            double smp1 = 0.0;
+            double smp2 = 0.0;
+            double tmp1 = 0.0;
+            double tmp2 = 0.0;
+            
+//            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+//                
+//                if (Math.abs(entry.getValue()[DELTA_MP1] - tmp1) > 4.0) {
+//                    smp1 = entry.getValue()[DELTA_MP1];
+//                }
+//                if (Math.abs(entry.getValue()[DELTA_MP2] - tmp2) > 4.0) {
+//                    smp2 = entry.getValue()[DELTA_MP2];
+//                }
+//
+//               tmp1 = entry.getValue()[DELTA_MP1];
+//               tmp2 = entry.getValue()[DELTA_MP2];
+//
+//               entry.getValue()[DELTA_MP1] -= smp1;
+//               entry.getValue()[DELTA_MP2] -= smp2;
+//               
+//            }
+
+            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+                smp1 += entry.getValue()[DELTA_MP1];
+                smp2 += entry.getValue()[DELTA_MP2];
+            }
+
+            smp1 /= (double)tm.getValue().size();
+            smp2 /= (double)tm.getValue().size();
+
+            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+                entry.getValue()[DELTA_MP1] -= smp1;
+                entry.getValue()[DELTA_MP2] -= smp2;
+            }
+            
+        });
+    }
+    
     public void saveDelta(String fileName) {
+        dropDeltaOffsets();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false))) {
             for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
