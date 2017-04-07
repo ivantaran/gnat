@@ -27,7 +27,7 @@ public class Gnat {
         RinexReader rnx = new RinexReader();
         
         try {
-            Files.walk(Paths.get("e:\\data\\rnx\\1\\"))
+            Files.walk(Paths.get("c:\\work\\data\\7\\"))
                     .filter(path -> 
                             Files.isRegularFile(path) && Files.isReadable(path)
                     )
