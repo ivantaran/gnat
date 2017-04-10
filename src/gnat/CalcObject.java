@@ -24,7 +24,7 @@ import rinex.ObserveObject;
  */
 public class CalcObject {
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static int DELTA_WIDTH = 9;
+    private final static int DELTA_WIDTH = 11;
     private final static int DELTA_DX   = 0;
     private final static int DELTA_DY   = 1;
     private final static int DELTA_DZ   = 2;
@@ -34,6 +34,8 @@ public class CalcObject {
     private final static int DELTA_MP2  = 6;
     private final static int DELTA_IONP = 7;
     private final static int DELTA_IONL = 8;
+    private final static int DELTA_AZM  = 9;
+    private final static int DELTA_ELV  = 10;
     
     private final static int NAVMAP_WIDTH = 10;
     private final static int NAVMAP_X   = 0;
@@ -291,6 +293,8 @@ public class CalcObject {
                         deltaValues[DELTA_MP2] = mp2;
                         deltaValues[DELTA_IONP] = ionp;
                         deltaValues[DELTA_IONL] = ionl;
+                        deltaValues[DELTA_AZM] = aerv[0];
+                        deltaValues[DELTA_ELV] = aerv[1];
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
@@ -434,14 +438,16 @@ public class CalcObject {
             for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
                     
-                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
+                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
                             tm.getKey(), 
                             entry.getKey().longValue(), 
                             entry.getValue()[DELTA_DR], 
                             entry.getValue()[DELTA_MP1], 
                             entry.getValue()[DELTA_MP2],
                             entry.getValue()[DELTA_IONP], 
-                            entry.getValue()[DELTA_IONL]
+                            entry.getValue()[DELTA_IONL], 
+                            entry.getValue()[DELTA_AZM], 
+                            entry.getValue()[DELTA_ELV]
                     );
                     bw.write(line);
                 }

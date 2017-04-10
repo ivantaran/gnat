@@ -32,7 +32,7 @@ public class GlonassNavDataReader {
         try {
             int year = Integer.parseInt(line.substring(0, 2).trim());
             year = (year < 80) ? year + 2000 : 1900;
-            int month = Integer.parseInt(line.substring(3, 5).trim());
+            int month = Integer.parseInt(line.substring(3, 5).trim()) - 1;
             int day = Integer.parseInt(line.substring(6, 8).trim());
             int hour = Integer.parseInt(line.substring(9, 11).trim());
             int minute = Integer.parseInt(line.substring(12, 14).trim());

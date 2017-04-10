@@ -4,13 +4,9 @@
  */
 package gnat;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rinex.RinexReader;
 
 /**
@@ -27,7 +23,7 @@ public class Gnat {
         RinexReader rnx = new RinexReader();
         
         try {
-            Files.walk(Paths.get("c:\\work\\data\\7\\"))
+            Files.walk(Paths.get("e:\\data\\rnx\\0\\"))
                     .filter(path -> 
                             Files.isRegularFile(path) && Files.isReadable(path)
                     )

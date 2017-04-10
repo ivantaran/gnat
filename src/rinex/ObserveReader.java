@@ -47,7 +47,7 @@ public class ObserveReader {
             try {
                 int year = Integer.parseInt(line.substring(1, 3).trim()) + 
                         (baseDate.get(Calendar.YEAR) / 100) * 100;
-                int month = Integer.parseInt(line.substring(4, 6).trim());
+                int month = Integer.parseInt(line.substring(4, 6).trim()) - 1;
                 int day = Integer.parseInt(line.substring(7, 9).trim());
                 int hour = Integer.parseInt(line.substring(10, 12).trim());
                 int minute = Integer.parseInt(line.substring(13, 15).trim());
