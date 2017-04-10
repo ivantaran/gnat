@@ -10,7 +10,7 @@ public class MarquardtMin {
     private final static double EPS             = 1.0e-8;
     private final static double TOLERANCE       = 1.0e-15;
     private final static double SCALE           = 0.5 * (Math.sqrt(5.0) + 1.0);
-    private final static int    COUNT           = 10000;
+    private final static int    COUNT           = 10;
     private final static int    POSITION_SIZE   = 4;
     
     private void jdfprod(double jcbn[][], double delta[], double jdf[][]) {

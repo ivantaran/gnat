@@ -11,7 +11,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
@@ -129,7 +128,8 @@ public class CalcObject {
         
 //        gset.setStepTime(-navData.getTimeOffset());
 //        System.out.println(navData.getTimeOffset());
-//        gset.setStepTime(1.47500); //TODO correct rotation -0.07101
+//        gset.setStepTime(1.4560); //TODO correct rotation -0.07101
+//        gset.setStepTime(0.4560); //TODO correct rotation -0.07101
 //        model.step(gset);
         
         gset.setStepTime(stepTime);
@@ -374,66 +374,68 @@ public class CalcObject {
     }
     
     private void dropDeltaOffsets() {
-//                tm.getKey(),
-//                entry.getKey().longValue(),
         delta.entrySet().forEach((tm) -> {
             double smp1 = 0.0;
             double smp2 = 0.0;
-            int cmp1 = 0;
-            int cmp2 = 0;
+            int c = 0;
             double ionl;
-            double t;
+            double level = 0.005;
             
-            ArrayList<Double> mean = new ArrayList();
+            ArrayList<Double> mean1 = new ArrayList();
+            ArrayList<Double> mean2 = new ArrayList();
             
             if (tm.getValue().firstEntry() != null) {
                 ionl = tm.getValue().firstEntry().getValue()[DELTA_IONL];
-                t = tm.getValue().firstEntry().getKey();
             }
             else {
                 ionl = 0.0;
-                t = 0.0;
             }
             
             for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
-                if (Math.abs(entry.getValue()[DELTA_IONL] - ionl) > 0.01 || entry.getKey() - t > 1.0) {
-                    mean.add(smp1 / (double)cmp1);
+                if (Math.abs(entry.getValue()[DELTA_IONL] - ionl) > level) {
+                    mean1.add(smp1 / (double)c);
+                    mean2.add(smp2 / (double)c);
                     smp1 = entry.getValue()[DELTA_MP1];
-                    cmp1 = 1;
+                    smp2 = entry.getValue()[DELTA_MP2];
+                    c = 1;
                 }
                 else {
                     smp1 += entry.getValue()[DELTA_MP1];
-                    cmp1++;
+                    smp2 += entry.getValue()[DELTA_MP2];
+                    c++;
                 }
                 ionl = entry.getValue()[DELTA_IONL];
-                t = entry.getKey();
             }
+            
+            mean1.add(smp1 / (double)c);
+            mean2.add(smp2 / (double)c);
 
-            cmp1 = 0;
+            c = 0;
             if (tm.getValue().firstEntry() != null) {
                 ionl = tm.getValue().firstEntry().getValue()[DELTA_IONL];
-                t = tm.getValue().firstEntry().getKey();
             }
             else {
                 ionl = 0.0;
-                t = 0.0;
             }
             for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
-                if (cmp1 >= mean.size()) {
+                if (c < mean1.size() && c < mean2.size()) {
+                    entry.getValue()[DELTA_MP1] -= mean1.get(c);
+                    entry.getValue()[DELTA_MP2] -= mean2.get(c);
+                }
+                else {
+                    System.out.printf(Locale.ROOT, "error: dropDeltaOffsets");
                     break;
                 }
-                entry.getValue()[DELTA_MP1] -= mean.get(cmp1);
-                if (Math.abs(entry.getValue()[DELTA_IONL] - ionl) > 0.01 || entry.getKey() - t > 1.0) {
-                    cmp1++;
+                if (Math.abs(entry.getValue()[DELTA_IONL] - ionl) > level) {
+                    c++;
                 }
                 ionl = entry.getValue()[DELTA_IONL];
-                t = entry.getKey();
             }
         });
     }
     
     public void saveDelta(String fileName) {
-//        dropDeltaOffsets();
+        dropDeltaOffsets();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false))) {
             for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
                 for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
