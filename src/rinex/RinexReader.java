@@ -7,6 +7,8 @@ package rinex;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -199,6 +201,9 @@ public class RinexReader {
                 if (result) {
                     headLines.add(line);
                 }
+                else {
+                    return result;
+                }
                 
                 while (br.ready() && result && !eoh) {
                     line = br.readLine();
@@ -241,6 +246,21 @@ public class RinexReader {
         switchReader();
         
         return result;
+    }
+    
+    public void openDir(String dir) {
+        try {
+            Files.walk(Paths.get(dir))
+                    .filter(path -> 
+                            Files.isRegularFile(path) && Files.isReadable(path)
+                    )
+                    .forEach(path -> {
+                        open(path.toAbsolutePath().toString());
+                        System.out.println(getErrorMessasge());
+                    });
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
     
     void switchReader() {

@@ -321,7 +321,8 @@ public class ObserveReader {
             if (index > -1) {
                 line = headLines.get(index);
                 try {
-                    leapSeconds = Integer.parseInt(line.substring(0, 6).trim());
+                    line = line.substring(0, 6).trim();
+                    leapSeconds = line.length() > 0 ? Integer.parseInt(line) : 0;
                 }
                 catch (NumberFormatException e) {
                     warning(String.format("NumberFormatException at header line %d", index));

@@ -22,35 +22,50 @@ public class Gnat {
         
         RinexReader rnx = new RinexReader();
         
-        try {
-            Files.walk(Paths.get("c:\\work\\data\\3\\"))
-                    .filter(path -> 
-                            Files.isRegularFile(path) && Files.isReadable(path)
-                    )
-                    .forEach(path -> {
-                        rnx.open(path.toAbsolutePath().toString());
-                        System.out.println(rnx.getErrorMessasge());
-                    });
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-        
+//        try {
+//            Files.walk(Paths.get("/home/taran/work/data/18026"))
+//                    .filter(path -> 
+//                            Files.isRegularFile(path) && Files.isReadable(path)
+//                    )
+//                    .forEach(path -> {
+//                        rnx.open(path.toAbsolutePath().toString());
+//                        System.out.println(rnx.getErrorMessasge());
+//                    });
+//        } catch (IOException ex) {
+//            System.out.println(ex.getMessage());
+//        }
+        rnx.openDir("/home/taran/tmp/5/data/18032/L11");
+        rnx.openDir("/home/taran/tmp/5/data/18033/L11");
+        rnx.openDir("/home/taran/tmp/5/data/18034/L11");
+        rnx.openDir("/home/taran/tmp/5/data/18038/L11");
+        rnx.openDir("/home/taran/tmp/5/data/18039/L11");
+
+        rnx.openDir("/home/taran/tmp/5/data/18032/L21");
+        rnx.openDir("/home/taran/tmp/5/data/18033/L21");
+        rnx.openDir("/home/taran/tmp/5/data/18034/L21");
+        rnx.openDir("/home/taran/tmp/5/data/18038/L21");
+        rnx.openDir("/home/taran/tmp/5/data/18039/L21");
         if (rnx.observeReader != null) {
             rnx.observeReader.save();
         }
         
-        rnx.gnd_tmp.save();
+        if (rnx.gnd_tmp != null) {
+            rnx.gnd_tmp.save();
+            
+            CalcObject co = new CalcObject();
+            co.addGlonassNavDataList(rnx.gnd_tmp.getNavDataList());
+
+//            co.save("co.txt");
+            co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
+            co.addObservesMap(rnx.observeReader.getObjectMap());
+            co.saveDelta("delta.txt");
+            MarquardtMin mm = new MarquardtMin();
+            mm.exec(co);
+            co.saveDelta("delta1.txt");
+            
+        }
         
-        CalcObject co = new CalcObject();
-        co.addGlonassNavDataList(rnx.gnd_tmp.getNavDataList());
         
-//        co.save("co.txt");
-        co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
-        co.addObservesMap(rnx.observeReader.getObjectMap());
-        co.saveDelta("delta.txt");
-        MarquardtMin mm = new MarquardtMin();
-        mm.exec(co);
-        co.saveDelta("delta1.txt");
 //    http://pastebin.com/mgcv1FpA
     }
 }
