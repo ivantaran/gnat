@@ -22,29 +22,19 @@ public class Gnat {
         
         RinexReader rnx = new RinexReader();
         
-//        try {
-//            Files.walk(Paths.get("/home/taran/work/data/18026"))
-//                    .filter(path -> 
-//                            Files.isRegularFile(path) && Files.isReadable(path)
-//                    )
-//                    .forEach(path -> {
-//                        rnx.open(path.toAbsolutePath().toString());
-//                        System.out.println(rnx.getErrorMessasge());
-//                    });
-//        } catch (IOException ex) {
-//            System.out.println(ex.getMessage());
-//        }
-        rnx.openDir("/home/taran/tmp/5/data/18032/L11");
-        rnx.openDir("/home/taran/tmp/5/data/18033/L11");
-        rnx.openDir("/home/taran/tmp/5/data/18034/L11");
-        rnx.openDir("/home/taran/tmp/5/data/18038/L11");
-        rnx.openDir("/home/taran/tmp/5/data/18039/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18033/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18034/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18038/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18039/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18040/L11");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18033/L21");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18034/L21");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18038/L21");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18039/L21");
+        rnx.openDir("/home/taran/tmp/BAMI2018/sch/1/data/18040/L21");
 
-        rnx.openDir("/home/taran/tmp/5/data/18032/L21");
-        rnx.openDir("/home/taran/tmp/5/data/18033/L21");
-        rnx.openDir("/home/taran/tmp/5/data/18034/L21");
-        rnx.openDir("/home/taran/tmp/5/data/18038/L21");
-        rnx.openDir("/home/taran/tmp/5/data/18039/L21");
+//        rnx.openDir("/home/taran/tmp/BAMI2018/vniiftri/3/bami/PRM2");
+        
         if (rnx.observeReader != null) {
             rnx.observeReader.save();
         }

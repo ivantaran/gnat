@@ -240,6 +240,11 @@ public class CalcObject {
                     if (object == null) {
                         continue;
                     }
+
+//                    double obsC9    = ea.getValue().getOrDefault("C9", 0.0);
+//                    double obsSnr9  = ea.getValue().getOrDefault("S9", 0.0);
+//                    double snr      = obsSnr9;
+//                    double range    = obsC9;
                     
                     double obsP1    = ea.getValue().getOrDefault("P1", 0.0);
                     double obsL1    = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
@@ -247,6 +252,7 @@ public class CalcObject {
                     double obsP2    = ea.getValue().getOrDefault("P2", 0.0);
                     double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
                     double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
+                    
                     double snr      = Math.min(obsSnr1, obsSnr2);
                     double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
                     double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
@@ -266,7 +272,7 @@ public class CalcObject {
 //                            ok = true;
 //                        } 
 
-                    if (range != 0.0 && snr > 30.0 && elv > 15.0) {
+                    if (range != 0.0 && snr > 55.0 && elv > 7.0) {
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
