@@ -46,15 +46,18 @@ public class RinexReader {
     private ErrorCodes errorCode;
     
     public RinexReader() {
-        version_list = new double[4];
+        version_list = new double[6];
         version_list[0] = 2.00;
         version_list[1] = 2.01;
         version_list[2] = 2.10;
         version_list[3] = 2.11;
+        version_list[4] = 3.02;
+        version_list[5] = 3.03;
         
-        type_list = new char[2];
+        type_list = new char[3];
         type_list[0] = 'O';
         type_list[1] = 'G';
+        type_list[2] = 'N';
         
         system_list = new char[6];
         system_list[0] = ' ';
@@ -274,6 +277,7 @@ public class RinexReader {
                 }
                 break;
             case 'G':
+            case 'N':
                 if (gnd_tmp == null) {
                     gnd_tmp = new GlonassNavDataReader(headLines, dataLines);
                 }
