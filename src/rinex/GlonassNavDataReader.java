@@ -12,17 +12,15 @@ import java.util.GregorianCalendar;
  * @author Taran
  */
 public class GlonassNavDataReader {
-    private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
     private int lineIndex = 0;
     protected ArrayList<GlonassNavData> navDataList = new ArrayList();
     
-    GlonassNavDataReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
-        add(headLines, dataLines);
+    GlonassNavDataReader(ArrayList<String> dataLines) {
+        add(dataLines);
     }
     
-    public final void add(ArrayList<String> headLines, ArrayList<String> dataLines) {
-        this.headLines = headLines;
+    public final void add(ArrayList<String> dataLines) {
         this.dataLines = dataLines;
         parse();
     }
@@ -47,14 +45,14 @@ public class GlonassNavDataReader {
 //            warning(sdf.format(c.getTimeInMillis()));
         }
         catch (NumberFormatException e) {
-            warning(String.format("NumberFormatException at header line %d", lineIndex));
+            warning(String.format("NumberFormatException at header line %d", getLineIndex()));
             warning(line);
             warning(e.getMessage());
         }
         return c;
     }
     
-    private void parseNavData() {
+    protected void parseNavData() {
         String line;
         double value;
         double[] state = new double[6];
@@ -118,27 +116,27 @@ public class GlonassNavDataReader {
         }
     }
     
-    private String getLine() {
+    protected String getLine() {
         String line = "";
-        if (lineIndex < dataLines.size()) {
-            line = dataLines.get(lineIndex);
+        if (getLineIndex() < dataLines.size()) {
+            line = dataLines.get(getLineIndex());
             lineIndex++;
         }
         return line;
     }
     
     private boolean linesReady() {
-        return (lineIndex < dataLines.size());
+        return (getLineIndex() < dataLines.size());
     }
 
-    private void warning(String message) {
+    protected void warning(String message) {
         System.out.println(message);
     }
 
     public void save() {
-        for (GlonassNavData gnd : navDataList) {
+        navDataList.stream().forEach((gnd) -> {
             gnd.save(String.valueOf(gnd.getNumber()) + ".gnd", true);
-        }
+        });
     }
 
     /**
@@ -146,6 +144,13 @@ public class GlonassNavDataReader {
      */
     public ArrayList<GlonassNavData> getNavDataList() {
         return navDataList;
+    }
+
+    /**
+     * @return the lineIndex
+     */
+    protected int getLineIndex() {
+        return lineIndex;
     }
 
 }

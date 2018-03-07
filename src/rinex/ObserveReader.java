@@ -17,6 +17,7 @@ import java.util.Locale;
 public class ObserveReader {
 
     public static final int FLAG_OK = 0;
+    private HeaderReader headerReader;
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
     private final HashMap<String, ObserveObject> objectMap = new HashMap();
@@ -30,7 +31,8 @@ public class ObserveReader {
     private final double[] approxPositionXyz = {0.0, 0.0, 0.0};
     private String markerName = "";
     
-    ObserveReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
+    ObserveReader(HeaderReader headerReader, ArrayList<String> headLines, ArrayList<String> dataLines) {
+        this.headerReader = headerReader;
         add(headLines, dataLines);
     }
     
@@ -60,13 +62,13 @@ public class ObserveReader {
 //                fsecond - baseFracSecond;
             }
             catch (NumberFormatException e) {
-                warning(String.format("NumberFormatException at line %d", lineIndex));
+                warning(String.format("NumberFormatException at line %d", getLineIndex()));
                 warning(line);
                 warning(e.getMessage());
             }
         }
         else {
-            warning(String.format("Line index %d length = %d.", lineIndex, line.length()));
+            warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
         }
         
         return result;
@@ -111,7 +113,7 @@ public class ObserveReader {
             result = Integer.valueOf(line.substring(28, 29));
         }
         else {
-            warning(String.format("Line index %d length = %d.", lineIndex, line.length()));
+            warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
         }
         
         return result;
@@ -124,21 +126,21 @@ public class ObserveReader {
             result = Integer.valueOf(line.substring(29, 32).trim());
         }
         else {
-            warning(String.format("Line index %d length = %d.", lineIndex, line.length()));
+            warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
         }
         
         return result;
     }
     
-    private void newObserve(String name, double time) {
+    protected void newObserve(String name, double time) {
         double data[] = new double[observeTypeCount];
-        observe.add(new ObserveSample(name, time, data));
+        getObserve().add(new ObserveSample(name, time, data));
     }
     
     private void addObservations() {
         ObserveObject object;
         
-        for (ObserveSample observeData : observe) {
+        for (ObserveSample observeData : getObserve()) {
             String name = observeData.getName();
 
             if (getObjectMap().containsKey(name)) {
@@ -154,14 +156,14 @@ public class ObserveReader {
         
     }
     
-    private void readObservesHeader() {
+    protected void readObservesHeader() {
         double time;
         int flag;
         int count;
         int objectLineCount;
         int indexObject = 0;
         
-        observe.clear();
+        getObserve().clear();
         
         String line = getLine();
         flag = getFlag(line);
@@ -180,7 +182,7 @@ public class ObserveReader {
     //                    warning(name);
                     }
                     else {
-                        warning(String.format("error at line %d", lineIndex));
+                        warning(String.format("error at line %d", getLineIndex()));
                         warning(line);
                         System.exit(-1);
                     }
@@ -196,7 +198,7 @@ public class ObserveReader {
         }
     }
     
-    private void readObservations() {
+    protected void readObservations() {
         int observeLineCount = (observeTypeCount - 1)/5 + 1;
         int indexObserve;
         int valuePosition;
@@ -204,7 +206,7 @@ public class ObserveReader {
         double value;
         int lli, ps; // TODO use lli and ps
         
-        for (ObserveSample data : observe) {
+        for (ObserveSample data : getObserve()) {
             indexObserve = 0;
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
@@ -262,7 +264,7 @@ public class ObserveReader {
         }
     }
     
-    private boolean parseHeader() {
+    protected boolean parseHeader() {
         boolean result = true;
         int index;
         String line;
@@ -387,21 +389,21 @@ public class ObserveReader {
         }
     }
     
-    private String getLine() {
+    protected String getLine() {
         String line = "";
-        if (lineIndex < dataLines.size()) {
-            line = dataLines.get(lineIndex);
+        if (getLineIndex() < dataLines.size()) {
+            line = dataLines.get(getLineIndex());
             lineIndex++;
         }
         return line;
     }
     
-    private void warning(String message) {
+    protected void warning(String message) {
         System.out.println(message);
     }
     
     private boolean linesReady() {
-        return (lineIndex < dataLines.size());
+        return (getLineIndex() < dataLines.size());
     }
     
     public void save() {
@@ -417,5 +419,26 @@ public class ObserveReader {
      */
     public HashMap<String, ObserveObject> getObjectMap() {
         return objectMap;
+    }
+
+    /**
+     * @return the observe
+     */
+    protected ArrayList<ObserveSample> getObserve() {
+        return observe;
+    }
+
+    /**
+     * @return the lineIndex
+     */
+    protected int getLineIndex() {
+        return lineIndex;
+    }
+
+    /**
+     * @return the headerReader
+     */
+    public HeaderReader getHeaderReader() {
+        return headerReader;
     }
 }
