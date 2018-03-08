@@ -272,7 +272,7 @@ public class CalcObject {
 //                            ok = true;
 //                        } 
 
-                    if (range != 0.0 && snr > 55.0 && elv > 7.0) {
+                    if (range != 0.0 && snr > 35.0 && elv > 15.0) {
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;

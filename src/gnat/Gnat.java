@@ -1,12 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package gnat;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import rinex.RinexReader;
 
 /**
@@ -22,7 +16,7 @@ public class Gnat {
         
         RinexReader rnx = new RinexReader();
         
-        rnx.openDir("/home/taran/work/tmp/rnx");
+        rnx.openDir("/home/taran/tmp/rnx/1");
 
 //        rnx.openDir("/home/taran/tmp/BAMI2018/vniiftri/3/bami/PRM2");
         

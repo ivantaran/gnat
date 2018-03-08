@@ -17,6 +17,11 @@ import java.util.Locale;
 public class ObserveReader {
 
     public static final int FLAG_OK = 0;
+    public static final int FLAG_POWER_FAILURE = 1;
+    public static final int FLAG_START_MOVING_ANTENNA = 2;
+    public static final int FLAG_END_OF_KINEMATIC = 3;
+    public static final int FLAG_HEADER = 4;
+    public static final int FLAG_EXTEVENT = 5;
     private HeaderReader headerReader;
     private ArrayList<String> headLines;
     private ArrayList<String> dataLines;
@@ -109,11 +114,13 @@ public class ObserveReader {
     private int getFlag(String line) {
         int result = -1;
         
-        if (line.length() > 27) {
+        try {
             result = Integer.valueOf(line.substring(28, 29));
         }
-        else {
+        catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
+            warning(line);
+            warning(ex.getMessage());
         }
         
         return result;
@@ -193,7 +200,19 @@ public class ObserveReader {
             }
         }
         else {
-//            System.out.printf("flag: %d\n", flag);
+            if (flag == FLAG_HEADER || flag == FLAG_EXTEVENT) {
+                warning(String.format("flag at line: %d", getLineIndex()));
+                warning(line);
+                int c = Integer.parseInt(line.substring(29, 32).trim());
+                while (c > 0) {
+                    getLine();
+                    c--;
+                }
+            }
+            else {
+                warning(String.format("flag at line: %d", getLineIndex()));
+                warning(line);
+            }
             //TODO write all flags
         }
     }

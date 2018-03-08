@@ -254,9 +254,10 @@ public class RinexReader {
                     line = br.readLine();
                     lineIndex++;
                     //TODO MarkerComment to dataLines 
-                    if (line.indexOf(MARKER_COMMENT, MARKER_LINE_INDEX) < 0) {
-                        dataLines.add(line);
-                    }
+                    dataLines.add(line);
+//                    if (line.indexOf(MARKER_COMMENT, MARKER_LINE_INDEX) < 0) {
+//                        dataLines.add(line);
+//                    }
                 }
                 
             } else {
