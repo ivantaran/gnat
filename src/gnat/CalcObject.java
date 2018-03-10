@@ -246,12 +246,19 @@ public class CalcObject {
 //                    double snr      = obsSnr9;
 //                    double range    = obsC9;
                     
-                    double obsP1    = ea.getValue().getOrDefault("P1", 0.0);
-                    double obsL1    = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
-                    double obsSnr1  = ea.getValue().getOrDefault("S1", 0.0);
-                    double obsP2    = ea.getValue().getOrDefault("P2", 0.0);
-                    double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
-                    double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
+//                    double obsP1    = ea.getValue().getOrDefault("P1", 0.0);
+//                    double obsL1    = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
+//                    double obsSnr1  = ea.getValue().getOrDefault("S1", 0.0);
+//                    double obsP2    = ea.getValue().getOrDefault("P2", 0.0);
+//                    double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
+//                    double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
+
+                    double obsP1    = ea.getValue().getOrDefault("C1P", 0.0);
+                    double obsL1    = ea.getValue().getOrDefault("L1P", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
+                    double obsSnr1  = ea.getValue().getOrDefault("S1P", 0.0);
+                    double obsP2    = ea.getValue().getOrDefault("C2P", 0.0);
+                    double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
+                    double obsSnr2  = ea.getValue().getOrDefault("S2P", 0.0);
                     
                     double snr      = Math.min(obsSnr1, obsSnr2);
                     double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
@@ -272,7 +279,7 @@ public class CalcObject {
 //                            ok = true;
 //                        } 
 
-                    if (range != 0.0 && snr > 35.0 && elv > 15.0) {
+                    if (range != 0.0 && snr > 55.0 && elv > 10.0) {
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;

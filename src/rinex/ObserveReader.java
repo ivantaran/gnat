@@ -144,7 +144,7 @@ public class ObserveReader {
         getObserve().add(new ObserveSample(name, time, data));
     }
     
-    private void addObservations() {
+    protected void addObservations() {
         ObserveObject object;
         
         for (ObserveSample observeData : getObserve()) {

@@ -26,7 +26,7 @@ public class HeaderReader {
     private String rec_vers = "";
     private String ant_num = "";
     private String ant_type = "";
-    private double approx_position_xyz[] = {0.0, 0.0, 0.0};
+    private final double approx_position_xyz[] = {0.0, 0.0, 0.0};
     private double ant_hen[] = {0.0, 0.0, 0.0};
     private ArrayList<String> types_of_observ = null;
     private final HashMap<Character, String[]> sys_obs_types = new HashMap();
@@ -43,9 +43,17 @@ public class HeaderReader {
     private int lineIndex = 0;
 
     HeaderReader(ArrayList<String> headLines) {
+        setHeadLines(headLines);
+    }
+
+    /**
+     * @param headLines the headLines to set
+     */
+    public final void setHeadLines(ArrayList<String> headLines) {
         this.headLines = headLines;
         parse();
     }
+
     
     private void parse() {
         lineIndex = 0;
@@ -78,8 +86,24 @@ public class HeaderReader {
     }
     private void parse_ant_num_type(String line){
     }
+    
     private void parse_approx_position_xyz(String line){
+        String lineValue;
+        try {
+            lineValue = line.substring(0, 14).trim();
+            approx_position_xyz[0] = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
+            lineValue = line.substring(14, 28).trim();
+            approx_position_xyz[1] = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
+            lineValue = line.substring(28, 42).trim();
+            approx_position_xyz[2] = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
+        }
+        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+            warning(String.format("error at line: %d", lineIndex));
+            warning(line);
+            warning(ex.getMessage());
+        }
     }
+    
     private void parse_antenna_delta_hen(String line){
     }
     private void parse_types_of_observ(int index){
@@ -90,7 +114,12 @@ public class HeaderReader {
 
         try {
             char sys = line.charAt(0);
-            int count = Integer.valueOf(line.substring(3, 6));
+            if (!Character.isLetter(sys)) {
+                warning(String.format("Error at line %d", lineIndex));
+                warning(line);
+                System.exit(-1);
+            }
+            int count = Integer.parseInt(line.substring(3, 6).trim());
             countLines = (count - 1) / 13 + 1;
             String types[] = new String[count];
             int c = 0;
@@ -104,7 +133,11 @@ public class HeaderReader {
                             if (!type.isEmpty()) {
                                 types[c] = type;
                             }
-                            line = getLine();
+                            else {
+                                warning(String.format("Error at line %d", lineIndex));
+                                warning(line);
+                                System.exit(-1);
+                            }
                             c++;
                         }
                         else {
@@ -117,20 +150,34 @@ public class HeaderReader {
                     warning(line);
                     System.exit(-1);
                 }
-                if (sys != 0) {
-                    getSysObsTypes().put(sys, types);
+                if (c < count) {
+                    line = getLine();
                 }
             }
+            getSysObsTypes().put(sys, types);
         }
         catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("Error at line %d", lineIndex));
+            warning(line);
             warning(ex.getMessage());
         }
     }
+    
     private void parse_signal_strength_unit(String line){
     }
+    
     private void parse_interval(String line){
+        try {
+            interval = Double.parseDouble(line.substring(0, 10).trim());
+        }
+        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+            warning(String.format("error at line: %d", lineIndex));
+            warning(line);
+            warning(ex.getMessage());
+            System.exit(-1);
+        }
     }
+    
     private void parse_time_of_first_obs(String line){
     }
     private void parse_sys_phase_shift(int index){
@@ -140,6 +187,15 @@ public class HeaderReader {
     private void parse_glonass_cod_phs_bis(int index){
     }
     private void parse_leap_seconds(String line){
+        try {
+            leap_seconds = Integer.parseInt(line.substring(0, 6).trim());
+        }
+        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+            warning(String.format("error at line: %d", lineIndex));
+            warning(line);
+            warning(ex.getMessage());
+            System.exit(-1);
+        }
     }
     
     private void parseLine() {
@@ -257,6 +313,13 @@ public class HeaderReader {
      */
     public HashMap<Character, String[]> getSysObsTypes() {
         return sys_obs_types;
+    }
+
+    /**
+     * @return the approx_position_xyz
+     */
+    public double[] getApproxPositionXyz() {
+        return approx_position_xyz;
     }
 
 }

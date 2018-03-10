@@ -79,87 +79,106 @@ public class ObserveReader3 extends ObserveReader {
     
     @Override
     protected void readObservesHeader() {
-//        int flag;
-//        
-//        getObserve().clear();
-//        
-//        String line = getLine();
-//        flag = getFlag(line);
-//        
-//        if (flag == FLAG_OK) {
-//            time = getDeltaTime(line);
-//            count = getObjectCount(line);
-//            
-//            for (int i = 0; i < count; i++) {
-//                line = getLine();
-//                newObserve(name, time);
-//            }
-//        }
-//        else {
-//            if (flag < 0) {
-//                warning(String.format("error at line %d", getLineIndex()));
-//                warning(line);
-//                System.exit(-1);
-//            }
-////            System.out.printf("flag: %d\n", flag);
-//            //TODO write all flags
-//        }
+        int flag;
+        
+        getObserve().clear();
+        
+        String line = getLine();
+        flag = getFlag(line);
+        
+        if (flag == FLAG_OK) {
+            time = getDeltaTime(line);
+            count = getObjectCount(line);
+        }
+        else {
+            if (flag < 0) {
+                warning(String.format("error at line %d", getLineIndex()));
+                warning(line);
+                System.exit(-1);
+            }
+            if (flag == FLAG_HEADER || flag == FLAG_EXTEVENT) {
+                warning(String.format("flag at line: %d", getLineIndex()));
+                warning(line);
+                int c = Integer.parseInt(line.substring(29, 32).trim());
+                while (c > 0) {
+                    getLine();
+                    c--;
+                }
+            }
+            else {
+                warning(String.format("flag at line: %d", getLineIndex()));
+                warning(line);
+            }
+            //TODO write all flags
+        }
     }
     
     @Override
     protected void readObservations() {
-//        int observeLineCount = (observeTypeCount - 1)/5 + 1;
-//        int indexObserve;
-//        int valuePosition;
-//        String lineValue;
-//        double value;
-//        int lli, ps; // TODO use lli and ps
-//
-//        String line = getLine();
-//        String name = line.substring(0, 3).trim();
-//        HeaderReader hr = getHeaderReader();
-//        String types[] = hr.getSysObsTypes().get(name.charAt(0));
-//        
-//        for (ObserveSample data : getObserve()) {
-//            indexObserve = 0;
-//            for (int j = 0; j < observeLineCount; ++j) {
-//                String line = getLine();
-//                for (int i = 0; (i < 5) && (indexObserve < observeTypeCount); ++i, ++indexObserve) {
-//                    valuePosition = 16 * i;
-//                    if (valuePosition + 14 <= line.length()) { //TODO check +14 value
-//                        lineValue = line.substring(valuePosition, valuePosition + 14).trim();
-//                        value = (lineValue.isEmpty()) ? 0.0 : Double.valueOf(lineValue);
-//                    }
-//                    else {
-//                        value = 0.0;
-//                    }
-//
-//                    valuePosition += 14;
-//                    if (valuePosition + 1 <= line.length()) {
-//                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
-//                        lli = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
-//                    }
-//                    else {
-//                        lli = 0;
-//                    }
-//                    
-//                    valuePosition += 1;
-//                    if (valuePosition + 1 <= line.length()) {
-//                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
-//                        ps = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
-//                    }
-//                    else {
-//                        ps = 0;
-//                    }
-//                    
-////                    if (lli != 0) {
-////                        System.out.printf(Locale.ROOT, "lli[%.3f]: %d\n", value, lli);
-////                    }
-//                    
-//                    data.getData()[indexObserve] = value;
-//                }
-//            }
-//        }
+        ObserveObject object;
+        HeaderReader hr;
+        int valuePosition;
+        String lineValue, line, name, types[];
+        double value, data[];
+        int lli, ps; // TODO use lli and ps
+        
+        for (int c = 0; c < count; c++) {
+            line = getLine();
+            name = line.substring(0, 3).trim();
+            hr = getHeaderReader();
+            types = hr.getSysObsTypes().get(name.charAt(0));
+
+            if (types == null || types.length < 1) {
+                continue;
+            }
+
+            data = new double[types.length];
+            
+            try {
+                for (int i = 0; i < data.length; i++) {
+                    valuePosition = 3 + 16 * i;
+                    lineValue = line.substring(valuePosition, valuePosition + 14).trim();
+                    value = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
+
+                    valuePosition += 14;
+                    lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                    lli = lineValue.isEmpty() ? 0 : Integer.parseInt(lineValue);
+
+                    valuePosition += 1;
+                    lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                    ps = (lineValue.isEmpty()) ? 0 : Integer.parseInt(lineValue);
+                    data[i] = value;
+                }
+            }
+            catch (IndexOutOfBoundsException | NumberFormatException ex) {
+                warning(String.format("error at line: %d", getLineIndex()));
+                warning(line);
+                warning(ex.getMessage());
+            }
+
+            if (getObjectMap().containsKey(name)) {
+                object = getObjectMap().get(name);
+            }
+            else {
+                object = new ObserveObject(name);
+                getObjectMap().put(name, object);
+            }
+
+            object.putObsData(time, types, data);
+        }
+    }
+    
+    @Override
+    protected void addObservations() {
+        
+    }    
+
+    /**
+     * @return the approxPositionXyz
+     */
+    @Override
+    public double[] getApproxPositionXyz() {
+        return getHeaderReader().getApproxPositionXyz();
     }
     
 }

@@ -72,6 +72,7 @@ public class RinexReader {
     private char type = ' ';
     private String errorMessasge = "";
     private String warningMessasge = "";
+    private HeaderReader headerReader;
 
     private static enum ErrorCodes {Success, Line1Length, MarkerVersionType, Version, Type, System, Unknown};
     private final ArrayList<String> headLines = new ArrayList();
@@ -96,6 +97,7 @@ public class RinexReader {
         
         observeReader = null;
         gnd_tmp = null;
+        headerReader = null;
     }
     
     public static int getMarkerIndex(String marker, ArrayList<String> list) {
@@ -277,9 +279,13 @@ public class RinexReader {
             setError(ErrorCodes.Success);
         }
         
-        HeaderReader hr = new HeaderReader(headLines);
-        
-        switchReader(hr);
+        if (headerReader == null) {
+            headerReader = new HeaderReader(headLines);
+        }
+        else {
+            headerReader.setHeadLines(headLines);
+        }
+        switchReader(headerReader);
         
         return result;
     }
