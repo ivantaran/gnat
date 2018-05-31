@@ -31,9 +31,9 @@ public class Gnat {
             co.addGlonassNavDataList(rnx.gnd_tmp.getNavDataList());
 
 //            co.save("co.txt");
-            double pos[] = {2821840.3813,  2202230.2258,  5261500.6415};
-            co.setPositionXyz(pos);
-//            co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
+//            double pos[] = {2821840.3813,  2202230.2258,  5261500.6415};
+//            co.setPositionXyz(pos);
+            co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
             co.addObservesMap(rnx.observeReader.getObjectMap());
             co.saveDelta("delta.txt");
             MarquardtMin mm = new MarquardtMin();
