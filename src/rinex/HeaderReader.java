@@ -100,6 +100,7 @@ public class HeaderReader {
         catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             warning(ex.getMessage());
         }
     }
@@ -117,6 +118,7 @@ public class HeaderReader {
             if (!Character.isLetter(sys)) {
                 warning(String.format("Error at line %d", lineIndex));
                 warning(line);
+                warning(Thread.currentThread().getStackTrace()[1].getMethodName());
                 System.exit(-1);
             }
             int count = Integer.parseInt(line.substring(3, 6).trim());
@@ -148,6 +150,7 @@ public class HeaderReader {
                 else {
                     warning(String.format("Error at line %d", lineIndex));
                     warning(line);
+                    warning(Thread.currentThread().getStackTrace()[1].getMethodName());
                     System.exit(-1);
                 }
                 if (c < count) {
@@ -160,6 +163,7 @@ public class HeaderReader {
             warning(String.format("Error at line %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
         }
     }
     
@@ -174,6 +178,7 @@ public class HeaderReader {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             System.exit(-1);
         }
     }
@@ -194,6 +199,7 @@ public class HeaderReader {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             System.exit(-1);
         }
     }

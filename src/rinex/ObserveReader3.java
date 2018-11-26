@@ -29,6 +29,7 @@ public class ObserveReader3 extends ObserveReader {
         }
         else {
             warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
         }
         
         return result;
@@ -53,6 +54,7 @@ public class ObserveReader3 extends ObserveReader {
             warning(String.format("Exception at line %d", getLineIndex()));
             warning(line);
             warning(e.getMessage());
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
         }
         
         return result;
@@ -67,6 +69,7 @@ public class ObserveReader3 extends ObserveReader {
         catch (NumberFormatException ex) {
             warning(String.format("Error at line index %d", getLineIndex()));
             warning(ex.getMessage());
+            warning(Thread.currentThread().getStackTrace()[1].getMethodName());
         }
         
         return result;
@@ -94,11 +97,13 @@ public class ObserveReader3 extends ObserveReader {
             if (flag < 0) {
                 warning(String.format("error at line %d", getLineIndex()));
                 warning(line);
+                warning(Thread.currentThread().getStackTrace()[1].getMethodName());
                 System.exit(-1);
             }
             if (flag == FLAG_HEADER || flag == FLAG_EXTEVENT) {
                 warning(String.format("flag at line: %d", getLineIndex()));
                 warning(line);
+                warning(Thread.currentThread().getStackTrace()[1].getMethodName());
                 int c = Integer.parseInt(line.substring(29, 32).trim());
                 while (c > 0) {
                     getLine();
@@ -108,6 +113,7 @@ public class ObserveReader3 extends ObserveReader {
             else {
                 warning(String.format("flag at line: %d", getLineIndex()));
                 warning(line);
+                warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             }
             //TODO write all flags
         }
@@ -136,17 +142,34 @@ public class ObserveReader3 extends ObserveReader {
             
             try {
                 for (int i = 0; i < data.length; i++) {
+                    
                     valuePosition = 3 + 16 * i;
-                    lineValue = line.substring(valuePosition, valuePosition + 14).trim();
-                    value = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
-
+                    if (line.length() >= valuePosition + 14) {
+                        lineValue = line.substring(valuePosition, valuePosition + 14).trim();
+                        value = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
+                    }
+                    else {
+                        value = 0.0;
+                    }
+                    
                     valuePosition += 14;
-                    lineValue = line.substring(valuePosition, valuePosition + 1).trim();
-                    lli = lineValue.isEmpty() ? 0 : Integer.parseInt(lineValue);
-
+                    if (line.length() >= valuePosition + 1) {
+                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                        lli = lineValue.isEmpty() ? 0 : Integer.parseInt(lineValue);
+                    }
+                    else {
+                        lli = 0;
+                    }
+                    
                     valuePosition += 1;
-                    lineValue = line.substring(valuePosition, valuePosition + 1).trim();
-                    ps = (lineValue.isEmpty()) ? 0 : Integer.parseInt(lineValue);
+                    if (line.length() >= valuePosition + 1) {
+                        lineValue = line.substring(valuePosition, valuePosition + 1).trim();
+                        ps = (lineValue.isEmpty()) ? 0 : Integer.parseInt(lineValue);
+                    }
+                    else {
+                        ps = 0;
+                    }
+                    
                     data[i] = value;
                 }
             }
@@ -154,6 +177,7 @@ public class ObserveReader3 extends ObserveReader {
                 warning(String.format("error at line: %d", getLineIndex()));
                 warning(line);
                 warning(ex.getMessage());
+                warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             }
 
             if (getObjectMap().containsKey(name)) {
