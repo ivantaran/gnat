@@ -16,9 +16,10 @@ public class Gnat {
         
         RinexReader rnx = new RinexReader();
         
-        rnx.openDir("/home/taran/tmp/combined");
+//        rnx.openDir("/home/taran/tmp/delme");
+        rnx.openDir("/home/taran/tmp/181205/ns/SCH3/nk1/combined");
+//        rnx.openDir("/home/taran/tmp/181205/priem/temp/rinex_bami/0");
 
-//        rnx.openDir("/home/taran/tmp/BAMI2018/vniiftri/3/bami/PRM2");
         
         if (rnx.observeReader != null) {
             rnx.observeReader.save();

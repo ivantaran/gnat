@@ -50,7 +50,7 @@ public class CalcObject {
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
-    private double stepTime  =    1.0;
+    private double stepTime  =    1.0;//0.125;
     private double startTime = -900.0;
     private double endTime   =  900.0;
     private final GiModel model = new GiModel();
@@ -129,7 +129,8 @@ public class CalcObject {
 //        gset.setStepTime(-navData.getTimeOffset());
 //        System.out.println(navData.getTimeOffset());
 //        gset.setStepTime(1.4560); //TODO correct rotation -0.07101
-//        gset.setStepTime(0.4560); //TODO correct rotation -0.07101
+//        gset.setStepTime(1010000.0 / GiModel.CVEL); //TODO correct rotation -0.07101
+//        gset.setStepTime(0.003); //TODO correct rotation -0.07101
 //        model.step(gset);
         
         gset.setStepTime(stepTime);
@@ -241,8 +242,8 @@ public class CalcObject {
                         continue;
                     }
 
-//                    double obsC9    = ea.getValue().getOrDefault("C9", 0.0);
-//                    double obsSnr9  = ea.getValue().getOrDefault("S9", 0.0);
+//                    double obsC9    = ea.getValue().getOrDefault("C9I", 0.0);
+//                    double obsSnr9  = ea.getValue().getOrDefault("S9I", 0.0);
 //                    double snr      = obsSnr9;
 //                    double range    = obsC9;
                     
@@ -260,13 +261,21 @@ public class CalcObject {
                     double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
                     double obsSnr2  = ea.getValue().getOrDefault("S2P", 0.0);
                     
-                    double snr      = obsSnr1;
-                    double range    = obsP1;
+//                    if (obsP1 != 0.0) {
+//                        obsP1 += 262.140;
+//                    }
+//                    
+//                    if (obsP2 != 0.0) {
+//                        obsP2 += 256.753 + 1.40;
+//                    }
+                    
+//                    double snr      = obsSnr1;
+//                    double range    = obsP1;
 
-//                    double snr      = Math.min(obsSnr1, obsSnr2);
+                    double snr      = Math.min(obsSnr1, obsSnr2);
                     double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
                     double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
-//                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                     double ionl     = obsL1 - obsL2;
                     double ionp     = obsP2 - obsP1;
                     double mp1      = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
@@ -282,7 +291,7 @@ public class CalcObject {
 //                            ok = true;
 //                        } 
 
-                    if (range != 0.0 && snr > 35.0 && elv > 10.0) {
+                    if (range != 0.0 && snr > 60.0 && elv > 10.0) {
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
