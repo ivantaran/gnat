@@ -50,9 +50,9 @@ public class CalcObject {
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
-    private double stepTime  =    1.0;//0.125;
-    private double startTime = -900.0;
-    private double endTime   =  900.0;
+    private double stepTime  = 1.0; //0.125;
+    private double startTime = 0.0;
+    private double endTime   =  1800.0;
     private final GiModel model = new GiModel();
     private final double position[];
     private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
@@ -218,7 +218,7 @@ public class CalcObject {
             
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
-//                if (objectName != 17) continue;
+//                if (objectName == 19 || objectName == 8) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
@@ -256,10 +256,10 @@ public class CalcObject {
 
                     double obsP1    = ea.getValue().getOrDefault("C1P", 0.0);
                     double obsL1    = ea.getValue().getOrDefault("L1P", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
-                    double obsSnr1  = ea.getValue().getOrDefault("S1P", 0.0);
+                    double obsSnr1  = obsP1 > 0.0 ? ea.getValue().getOrDefault("S1P", 0.0) : 0.0;
                     double obsP2    = ea.getValue().getOrDefault("C2P", 0.0);
                     double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
-                    double obsSnr2  = ea.getValue().getOrDefault("S2P", 0.0);
+                    double obsSnr2  = obsP2 > 0.0 ? ea.getValue().getOrDefault("S2P", 0.0) : 0.0;
                     
 //                    if (obsP1 != 0.0) {
 //                        obsP1 += 262.140;
