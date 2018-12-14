@@ -50,13 +50,13 @@ public class CalcObject {
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
-    private double stepTime  = 1.0; //0.125;
-    private double startTime = 0.0;
-    private double endTime   =  1800.0;
+    private long stepTime = 1000; //0.125;
+    private long startTime = -900000;
+    private long endTime = 900000;
     private final GiModel model = new GiModel();
     private final double position[];
-    private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
-    private final HashMap<Integer, TreeMap<Double, double[]>> delta  = new HashMap();
+    private final HashMap<Integer, TreeMap<Long, double[]>> navMap = new HashMap();
+    private final HashMap<Integer, TreeMap<Long, double[]>> delta  = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
     
     CalcObject() {
@@ -92,37 +92,44 @@ public class CalcObject {
     private GlonassSet init(GlonassNavData navData) {
         GlonassSet gset = new GlonassSet();
         double[] initial = new double[GlonassSet.InitialLength];
-        double startTimeAbs;
+        long startTimeAbs;
         
-        if (stepTime < Double.MIN_NORMAL) {
-            stepTime  = Double.MIN_NORMAL;
+        if (stepTime < 1) {
+            System.out.println(String.format("invalid step time: %d", 
+                    stepTime));
+            stepTime = 1;
         }
         
-        if ((endTime - startTime) < Double.MIN_NORMAL) {
-            startTime = 0.0;
-            endTime = 0.0;
+        if (startTime > endTime) {
+            startTime = 0;
+            endTime = 0;
+            System.out.println(String.format("startTime > endTime: %d > %d", 
+                    startTime, endTime));
         }
         
-        if ((int)((endTime - startTime) / stepTime) - 1 > MAX_POINTS) {
+        if ((endTime - startTime) / stepTime - 1 > MAX_POINTS) {
             endTime = startTime + stepTime * MAX_POINTS;
+            System.out.println("overflow points");
         }
         
-        System.arraycopy(navData.getState(), 0, initial, 0, navData.getState().length);
-        System.arraycopy(navData.getAcceleration(), 0, initial, navData.getState().length, navData.getAcceleration().length);
+        System.arraycopy(navData.getState(), 0, initial, 0, 
+                navData.getState().length);
+        System.arraycopy(navData.getAcceleration(), 0, initial, 
+                navData.getState().length, navData.getAcceleration().length);
         
         gset.setInitial(initial);
         gset.setCurrent(initial.clone());
         
         if (startTime < 0) {
-            gset.setStepTime(-stepTime);
+            gset.setStepTimeInMillis(-stepTime);
         }
         else {
-            gset.setStepTime( stepTime);
+            gset.setStepTimeInMillis( stepTime);
         }
         
         startTimeAbs = Math.abs(startTime);
         
-        for (double i = 0; i < startTimeAbs; i += stepTime) {
+        for (long i = 0; i < startTimeAbs; i += stepTime) {
             model.step(gset);
         }
         
@@ -133,7 +140,7 @@ public class CalcObject {
 //        gset.setStepTime(0.003); //TODO correct rotation -0.07101
 //        model.step(gset);
         
-        gset.setStepTime(stepTime);
+        gset.setStepTimeInMillis(stepTime);
         
         return gset;
     }
@@ -142,16 +149,16 @@ public class CalcObject {
         
         navDataList.forEach((navData) -> {
             GlonassSet gset = init(navData);
-            double toe     = (double)navData.getTime().getTimeInMillis() * 0.001;
-            double current = toe + startTime;
-            TreeMap<Double, double[]> tm = navMap.get(navData.getNumber());
+            long toe     = navData.getTime().getTimeInMillis();
+            long current = toe + startTime;
+            TreeMap<Long, double[]> tm = navMap.get(navData.getNumber());
 
             if (tm == null) {
                 tm = new TreeMap();
                 navMap.put(navData.getNumber(), tm);
             }
 
-            for (double i = startTime; i < endTime; i += stepTime) {
+            for (long i = startTime; i < endTime; i += stepTime) {
                 tm.put(current, getMeasureArray(navData, current - toe, subject, gset.getCurrent()));
                 model.step(gset);
                 current += stepTime;
@@ -159,11 +166,13 @@ public class CalcObject {
         });        
     }
     
-    private double[] getMeasureArray(GlonassNavData navData, double dt, double[] subject, double[] object) {
+    private double[] getMeasureArray(GlonassNavData navData, long deltaMillis, double[] subject, double[] object) {
         double result[] = new double[NAVMAP_WIDTH];
         System.arraycopy(object, 0, result, 0, GlonassSet.VectorLength);
         double glotime = 0.0; //TODO read from obs file
-        result[NAVMAP_T] = (glotime + navData.getTimeOffset() + navData.getFrequencyOffset() * dt) * GiModel.CVEL - subject[3];
+        result[NAVMAP_T] = (glotime + navData.getTimeOffset() 
+                + navData.getFrequencyOffset() * (double)deltaMillis * 0.001) 
+                * GiModel.CVEL - subject[3];
         result[NAVMAP_L1] = navData.getFrequencyL1() * navData.getFrequencyOffset() + navData.getFrequencyL1();
         result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
         result[NAVMAP_L3] = navData.getFrequencyL3() * navData.getFrequencyOffset() + navData.getFrequencyL3();
@@ -175,15 +184,11 @@ public class CalcObject {
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false));
-            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : navMap.entrySet()) {
-                for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+            for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : navMap.entrySet()) {
+                for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                     double ds[] = entry.getValue();
-                    
-                    line = String.format("%d\t%d\t", 
-                            tm.getKey(), 
-                            entry.getKey().longValue()
-                    );
-                    
+                    line = String.format("%d\t%d\t", tm.getKey(), 
+                            entry.getKey());
                     for (int i = 0; i < ds.length; i++) {
                         line += String.format(Locale.ROOT, "%.12e\t", ds[i]);
                     }
@@ -225,17 +230,17 @@ public class CalcObject {
                 continue;
             }
             
-            TreeMap<Double, HashMap<String, Double>> a = obsObject.getValue().getData();
-            TreeMap<Double, double[]> b = navMap.get(objectName);
+            TreeMap<Long, HashMap<String, Double>> a = obsObject.getValue().getData();
+            TreeMap<Long, double[]> b = navMap.get(objectName);
             if (a != null && b != null) {
                 
-                TreeMap<Double, double[]> deltaRecord = delta.get(objectName);
+                TreeMap<Long, double[]> deltaRecord = delta.get(objectName);
                 if (deltaRecord == null) {
                     deltaRecord = new TreeMap();
                     delta.put(objectName, deltaRecord);
                 }
 
-                for (Map.Entry<Double, HashMap<String, Double>> ea : a.entrySet()) {
+                for (Map.Entry<Long, HashMap<String, Double>> ea : a.entrySet()) {
                     double object[] = b.get(ea.getKey());
                     
                     if (object == null) {
@@ -416,7 +421,7 @@ public class CalcObject {
                 ionl = 0.0;
             }
             
-            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+            for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                 if (Math.abs(entry.getValue()[DELTA_IONL] - ionl) > level) {
                     mean1.add(smp1 / (double)c);
                     mean2.add(smp2 / (double)c);
@@ -442,7 +447,7 @@ public class CalcObject {
             else {
                 ionl = 0.0;
             }
-            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+            for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                 if (c < mean1.size() && c < mean2.size()) {
                     entry.getValue()[DELTA_MP1] -= mean1.get(c);
                     entry.getValue()[DELTA_MP2] -= mean2.get(c);
@@ -462,12 +467,13 @@ public class CalcObject {
     public void saveDelta(String fileName) {
         dropDeltaOffsets();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, false))) {
-            for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
-                for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+            for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : delta.entrySet()) {
+                for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                     
-                    String line = String.format(Locale.ROOT, "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
+                    String line = String.format(Locale.ROOT, 
+                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
                             tm.getKey(), 
-                            entry.getKey().longValue(), 
+                            entry.getKey(), 
                             entry.getValue()[DELTA_DR], 
                             entry.getValue()[DELTA_MP1], 
                             entry.getValue()[DELTA_MP2],
@@ -500,8 +506,8 @@ public class CalcObject {
         updateNavData(subject);
         updateObserves(subject);
         
-        for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : delta.entrySet()) {
-            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+        for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : delta.entrySet()) {
+            for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                 value = entry.getValue()[DELTA_DR];
                 result += value * value;
                 c++;
@@ -515,8 +521,8 @@ public class CalcObject {
     
     public void copyJacobianAndDelta(double jacobian[][], double delta[]) {
         int i = 0;
-        for (HashMap.Entry<Integer, TreeMap<Double, double[]>> tm : this.delta.entrySet()) {
-            for (Map.Entry<Double, double[]> entry : tm.getValue().entrySet()) {
+        for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : this.delta.entrySet()) {
+            for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                 jacobian[0][i] = entry.getValue()[DELTA_DX];
                 jacobian[1][i] = entry.getValue()[DELTA_DY];
                 jacobian[2][i] = entry.getValue()[DELTA_DZ];

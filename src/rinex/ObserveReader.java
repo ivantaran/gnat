@@ -47,8 +47,8 @@ public class ObserveReader {
         parse();
     }
     
-    private double getDeltaTime(String line) {
-        double result = -1;
+    private long getTimeInMillis(String line) {
+        long result = -1;
         
         if (line.length() > 25) {
             try {
@@ -58,13 +58,12 @@ public class ObserveReader {
                 int day = Integer.parseInt(line.substring(7, 9).trim());
                 int hour = Integer.parseInt(line.substring(10, 12).trim());
                 int minute = Integer.parseInt(line.substring(13, 15).trim());
-                double fsecond = Double.parseDouble(line.substring(15, 26).trim());
-                int second = (int)fsecond;
-                fsecond -= second;
-                Calendar date = new GregorianCalendar(year, month, day, hour, minute, second);
-                result = date.getTimeInMillis() / 1000L + fsecond - (double)leapSeconds;
-//                result = date.getTimeInMillis() / 1000 - baseDate.getTimeInMillis() / 1000 + 
-//                fsecond - baseFracSecond;
+                double second = Double.parseDouble(line.substring(15, 26).trim());
+                long millis = (long)(second * 1000.0);
+                Calendar date = new GregorianCalendar(year, month, day, hour, 
+                        minute);
+                result = date.getTimeInMillis() + millis 
+                        - getHeaderReader().getLeapSeconds() * 1000L;
             }
             catch (NumberFormatException e) {
                 warning(String.format("NumberFormatException at line %d", getLineIndex()));
@@ -133,13 +132,14 @@ public class ObserveReader {
             result = Integer.valueOf(line.substring(29, 32).trim());
         }
         else {
-            warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
+            warning(String.format("Line index %d length = %d.", getLineIndex(), 
+                    line.length()));
         }
         
         return result;
     }
     
-    protected void newObserve(String name, double time) {
+    protected void newObserve(String name, long time) {
         double data[] = new double[observeTypeCount];
         getObserve().add(new ObserveSample(name, time, data));
     }
@@ -158,13 +158,13 @@ public class ObserveReader {
                 getObjectMap().put(name, object);
             }
             
-            object.putObsData(observeData.getTime(), typesObservations, observeData.getData());
+            object.putObsData(observeData.getTimeInMillis(), typesObservations, observeData.getData());
         }
         
     }
     
     protected void readObservesHeader() {
-        double time;
+        long time;
         int flag;
         int count;
         int objectLineCount;
@@ -176,7 +176,7 @@ public class ObserveReader {
         flag = getFlag(line);
         
         if (flag == FLAG_OK) {
-            time = getDeltaTime(line);
+            time = getTimeInMillis(line);
             count = getObjectCount(line);
             objectLineCount = (count - 1) / 12 + 1;
             

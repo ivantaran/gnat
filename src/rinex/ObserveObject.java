@@ -19,7 +19,7 @@ import java.util.TreeSet;
  */
 public class ObserveObject {
     private String name;
-    private final TreeMap<Double, HashMap<String, Double>> data = new TreeMap();
+    private final TreeMap<Long, HashMap<String, Double>> data = new TreeMap();
 
     public ObserveObject(String name) {
         this.name = name;
@@ -28,11 +28,11 @@ public class ObserveObject {
     /**
      * @return the data
      */
-    public TreeMap<Double, HashMap<String, Double>> getData() {
+    public TreeMap<Long, HashMap<String, Double>> getData() {
         return data;
     }
 
-    public void putObsData(double time, String[] types, double[] obs) {
+    public void putObsData(long time, String[] types, double[] obs) {
         HashMap<String, Double> lineObs = data.getOrDefault(time, new HashMap());
         for (int i = 0; i < Math.min(types.length, obs.length); i++) {
             lineObs.put(types[i], obs[i]);
@@ -58,21 +58,19 @@ public class ObserveObject {
             
             if (writeHeader) {
                 line = "Time\t";
-                line = typesSet.stream().map((type) -> type + '\t').reduce(line, String::concat);                
+                line = typesSet.stream().map((type) -> type + '\t')
+                        .reduce(line, String::concat);                
                 line += "\n";
                 bw.write(line);
             }
             
-            for (Map.Entry<Double, HashMap<String, Double>> entry : data.entrySet()) {
-                line = String.format("%d\t", entry.getKey().longValue());
+            for (Map.Entry<Long, HashMap<String, Double>> entry : data.entrySet()) {
+                line = String.format("%d\t", entry.getKey());
                 
                 line = typesSet.stream().map((type) -> 
-                        String.format(
-                                Locale.ROOT, 
-                                "%.12e\t", 
-                                entry.getValue().getOrDefault(type, 0.0)
-                        )
-                ).reduce(line, String::concat);
+                        String.format(Locale.ROOT, "%.12e\t", 
+                                entry.getValue().getOrDefault(type, 0.0)))
+                        .reduce(line, String::concat);
                 
                 line += "\n";
                 bw.write(line);

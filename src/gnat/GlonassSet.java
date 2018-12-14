@@ -78,6 +78,13 @@ public class GlonassSet implements Cloneable{
         this.stepTime = stepTime;
     }
 
+    /**
+     * @param stepTime the stepTime to set
+     */
+    public void setStepTimeInMillis(long stepTime) {
+        this.stepTime = (double)stepTime * 0.001;
+    }
+
     @Override
     public GlonassSet clone() {
         GlonassSet s;

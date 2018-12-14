@@ -11,7 +11,7 @@ import java.util.GregorianCalendar;
  */
 public class ObserveReader3 extends ObserveReader {
     
-    private double time = 0;
+    private long time = 0;
     private long count = 0;
     
     ObserveReader3(HeaderReader headerReader, ArrayList<String> headLines, ArrayList<String> dataLines) {
@@ -35,8 +35,8 @@ public class ObserveReader3 extends ObserveReader {
         return result;
     }
 
-    private double getDeltaTime(String line) {
-        double result = -1;
+    private long getTimeInMillis(String line) {
+        long result = -1;
         
         try {
             int year = Integer.parseInt(line.substring(2, 6).trim());
@@ -44,11 +44,12 @@ public class ObserveReader3 extends ObserveReader {
             int day = Integer.parseInt(line.substring(10, 12).trim());
             int hour = Integer.parseInt(line.substring(13, 15).trim());
             int minute = Integer.parseInt(line.substring(16, 18).trim());
-            double fsecond = Double.parseDouble(line.substring(18, 29).trim());
-            int second = (int)fsecond;
-            fsecond -= second;
-            Calendar date = new GregorianCalendar(year, month, day, hour, minute, second);
-            result = date.getTimeInMillis() / 1000L + fsecond - (double)getHeaderReader().getLeapSeconds();
+            double second = Double.parseDouble(line.substring(18, 29).trim());
+            long millis = (long)(second * 1000.0);
+            Calendar date = new GregorianCalendar(year, month, day, hour, 
+                    minute);
+            result = date.getTimeInMillis() + millis 
+                    - getHeaderReader().getLeapSeconds() * 1000L;
         }
         catch (NumberFormatException | IndexOutOfBoundsException e) {
             warning(String.format("Exception at line %d", getLineIndex()));
@@ -90,7 +91,7 @@ public class ObserveReader3 extends ObserveReader {
         flag = getFlag(line);
         
         if (flag == FLAG_OK) {
-            time = getDeltaTime(line);
+            time = getTimeInMillis(line);
             count = getObjectCount(line);
         }
         else {
