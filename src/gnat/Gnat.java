@@ -13,7 +13,7 @@ public class Gnat {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+
         RinexReader rnx = new RinexReader();
         
         rnx.openDir("/home/taran/work/obstest/data/data/18200");
@@ -34,6 +34,7 @@ public class Gnat {
 //            co.save("co.txt");
 //            double pos[] = {2821840.3813,  2202230.2258,  5261500.6415};
 //            co.setPositionXyz(pos);
+            
             co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
             co.addObservesMap(rnx.observeReader.getObjectMap());
             co.saveDelta("delta.txt");

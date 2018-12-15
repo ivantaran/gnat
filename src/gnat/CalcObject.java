@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 package gnat;
 
@@ -51,8 +46,8 @@ public class CalcObject {
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
     private long stepTime = 1000; //0.125;
-    private long startTime = -900000;
-    private long endTime = 900000;
+    private long startTime = 0;//-900000;
+    private long endTime = 1800000;//900000;
     private final GiModel model = new GiModel();
     private final double position[];
     private final HashMap<Integer, TreeMap<Long, double[]>> navMap = new HashMap();
@@ -297,6 +292,13 @@ public class CalcObject {
 //                        } 
 
                     if (range != 0.0 && snr > 60.0 && elv > 10.0) {
+                        
+                        double tropo = TroposphericDelay.getRangeCorrection(
+                                Math.toRadians(55.950776), 
+                                151.0, 
+                                aerv[1], 
+                                320.12);
+                        range -= tropo;
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
