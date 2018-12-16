@@ -46,36 +46,40 @@ public class CalcObject {
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
     private long stepTime = 1000; //0.125;
-    private long startTime = 0;//-900000;
-    private long endTime = 1800000;//900000;
+    private long startTime = -900000;
+    private long endTime = 900000;
+//    private long startTime = 0;//-900000;
+//    private long endTime = 1800000;//900000;
     private final GiModel model = new GiModel();
-    private final double position[];
+    private final double position[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    private final double m_latLonAlt[] = {0.0, 0.0, 0.0};
     private final HashMap<Integer, TreeMap<Long, double[]>> navMap = new HashMap();
     private final HashMap<Integer, TreeMap<Long, double[]>> delta  = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
     
     CalcObject() {
-        position = new double[] {
-//            2821841.0,
-//            2202230.0,
-//            5261499.0,
-            0.0,
-            0.0,
-            0.0,  
-            0.0,
-            0.0,
-            0.0,  
-            0.0
-        };
+        
     }
     
-    public void setPositionXyz(double[] xyz) {
-        position[0] = xyz[0];
-        position[1] = xyz[1];
-        position[2] = xyz[2];
+    public final void setPosition(double[] p, int len) {
+        System.arraycopy(p, 0, position, 0, 
+                Math.min(p.length, position.length));
+        NavUtils.ecefToLatLonAlt(p, m_latLonAlt);
     }
     
-    public double[] getPosition() {
+    public final double getLatitude() {
+        return m_latLonAlt[0];
+    }
+    
+    public final double getLongitude() {
+        return m_latLonAlt[1];
+    }
+    
+    public final double getAltitude() {
+        return m_latLonAlt[2];
+    }
+    
+    public final double[] getPosition() {
         return position;
     }
     
@@ -254,12 +258,12 @@ public class CalcObject {
 //                    double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
 //                    double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
 
-                    double obsP1    = ea.getValue().getOrDefault("C1P", 0.0);
-                    double obsL1    = ea.getValue().getOrDefault("L1P", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
-                    double obsSnr1  = obsP1 > 0.0 ? ea.getValue().getOrDefault("S1P", 0.0) : 0.0;
-                    double obsP2    = ea.getValue().getOrDefault("C2P", 0.0);
-                    double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
-                    double obsSnr2  = obsP2 > 0.0 ? ea.getValue().getOrDefault("S2P", 0.0) : 0.0;
+                    double obsP1    = ea.getValue().getOrDefault("C1C", 0.0);
+                    double obsL1    = ea.getValue().getOrDefault("L1C", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
+                    double obsSnr1  = obsP1 > 0.0 ? ea.getValue().getOrDefault("S1C", 0.0) : 0.0;
+                    double obsP2    = ea.getValue().getOrDefault("C2C", 0.0);
+                    double obsL2    = ea.getValue().getOrDefault("L2C", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
+                    double obsSnr2  = obsP2 > 0.0 ? ea.getValue().getOrDefault("S2C", 0.0) : 0.0;
                     
 //                    if (obsP1 != 0.0) {
 //                        obsP1 += 262.140;
@@ -291,13 +295,13 @@ public class CalcObject {
 //                            ok = true;
 //                        } 
 
-                    if (range != 0.0 && snr > 60.0 && elv > 10.0) {
+                    if (range != 0.0 && snr > 30.0 && elv > 10.0) {
                         
                         double tropo = TroposphericDelay.getRangeCorrection(
-                                Math.toRadians(55.950776), 
-                                151.0, 
+                                getLatitude(), 
+                                getAltitude(), 
                                 aerv[1], 
-                                320.12);
+                                ea.getKey());
                         range -= tropo;
                         
                         //Sagnac
@@ -334,6 +338,13 @@ public class CalcObject {
         }
     }
     
+    /**
+     * TODO move this method to NavUtils
+     * @param subject
+     * @param object
+     * @param aerv
+     * @return 
+     */
     public boolean aerv(double[] subject, double[] object, double[] aerv) {
         double[][] m = new double[3][3];
         double[] d = new double[3];

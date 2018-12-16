@@ -1,5 +1,7 @@
 package gnat;
 
+import java.util.GregorianCalendar;
+
 /**
  *
  * @author taran
@@ -121,9 +123,11 @@ public final class TroposphericDelay {
      * @return Tropospherical range correction, m
      * 
      */
-    public static final double getRangeCorrection(double latitude, double altitude, double elevation, double doy) {
+    public static final double getRangeCorrection(double latitude, double altitude, double elevation, long millis) {
         double r;
-        
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.setTimeInMillis(millis);
+        double doy = calendar.get(GregorianCalendar.DAY_OF_YEAR);
         assignIndexAndScale(elevation);
         double dmin = (latitude >= 0.0) ? DMIN_NORTH : DMIN_SOUTH;
         double ddcos = Math.cos(2.0 * Math.PI * (doy - dmin) / 365.25);

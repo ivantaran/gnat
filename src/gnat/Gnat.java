@@ -16,7 +16,8 @@ public class Gnat {
 
         RinexReader rnx = new RinexReader();
         
-        rnx.openDir("/home/taran/work/obstest/data/data/18200");
+        rnx.openDir("/home/taran/tmp/rnx");
+//        rnx.openDir("/home/taran/work/obstest/data/data/18200");
 //        rnx.openDir("/home/taran/tmp/1/SCH1/nk1/combined");
 //        rnx.openDir("/home/taran/tmp/181210/priem/temp/rinex_bami/0");
 
@@ -34,8 +35,8 @@ public class Gnat {
 //            co.save("co.txt");
 //            double pos[] = {2821840.3813,  2202230.2258,  5261500.6415};
 //            co.setPositionXyz(pos);
-            
-            co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
+            double p[] = rnx.observeReader.getApproxPositionXyz();
+            co.setPosition(p, p.length);
             co.addObservesMap(rnx.observeReader.getObjectMap());
             co.saveDelta("delta.txt");
             MarquardtMin mm = new MarquardtMin();

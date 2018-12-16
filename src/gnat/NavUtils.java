@@ -14,7 +14,12 @@ public class NavUtils {
     public static final double E1SQR = ((EARTH_A * EARTH_A - EARTH_B * EARTH_B) / (EARTH_A * EARTH_A));
     public static final double E2SQR = ((EARTH_A * EARTH_A - EARTH_B * EARTH_B) / (EARTH_B * EARTH_B));
     
-    public static void ecefToLla(double xyz[], double lla[]) {
+    /**
+     * 
+     * @param xyz 
+     * @param lla latitude, longitude, altitude, [rad, rad, m]
+     */
+    public static void ecefToLatLonAlt(double xyz[], double lla[]) {
         double p, t, st, ct, n;
 
         p = Math.sqrt(xyz[0] * xyz[0] + xyz[1] * xyz[1]);
