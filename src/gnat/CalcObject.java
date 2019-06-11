@@ -22,6 +22,7 @@ import rinex.ObserveObject;
  * @author Taran
  */
 public class CalcObject {
+
     private final static int MAX_POINTS = 0x7FFFFFFF;
     private final static int DELTA_WIDTH = 11;
     private final static int DELTA_DX   = 0;
@@ -50,9 +51,13 @@ public class CalcObject {
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
-    private double stepTime  =    1.0;//0.125;
+    private double stepTime = 1.0;//0.125;
     private double startTime = -900.0;
-    private double endTime   =  900.0;
+    private double endTime = 900.0;
+    private double minSnr = 45.0;
+    private double minElevation = Math.toRadians(10.0);
+    private String singleMode = "";
+    
     private final GiModel model = new GiModel();
     private final double position[];
     private final HashMap<Integer, TreeMap<Double, double[]>> navMap = new HashMap();
@@ -73,7 +78,63 @@ public class CalcObject {
             0.0
         };
     }
-    
+
+    /**
+     * @return the singleMode
+     */
+    public String getSingleMode() {
+        return singleMode;
+    }
+
+    /**
+     * @param singleMode the singleMode to set
+     */
+    public void setSingleMode(String singleMode) {
+        this.singleMode = singleMode;
+    }
+
+    /**
+     * @return the minSnr
+     */
+    public double getMinSnr() {
+        return minSnr;
+    }
+
+    /**
+     * @param minSnr the minSnr to set
+     */
+    public void setMinSnr(double minSnr) {
+        this.minSnr = minSnr;
+    }
+
+    /**
+     * @return the minElevation
+     */
+    public double getMinElevation() {
+        return minElevation;
+    }
+
+    /**
+     * @param minElevation the minElevation to set
+     */
+    public void setMinElevation(double minElevation) {
+        this.minElevation = minElevation;
+    }
+
+    /**
+     * @return the stepTime
+     */
+    public double getStepTime() {
+        return stepTime;
+    }
+
+    /**
+     * @param stepTime the stepTime to set
+     */
+    public void setStepTime(double stepTime) {
+        this.stepTime = stepTime;
+    }
+        
     public void setPositionXyz(double[] xyz) {
         position[0] = xyz[0];
         position[1] = xyz[1];
@@ -206,7 +267,6 @@ public class CalcObject {
     private void updateObserves(double[] subject) {
         int objectName;
         double[] aerv = new double[3];
-        double elv;
         boolean ok;
         
         delta.clear();
@@ -218,7 +278,7 @@ public class CalcObject {
             
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
-//                if (objectName != 17) continue;
+//                if (objectName == 5) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
@@ -241,11 +301,36 @@ public class CalcObject {
                     if (object == null) {
                         continue;
                     }
-
-//                    double obsC9    = ea.getValue().getOrDefault("C9I", 0.0);
-//                    double obsSnr9  = ea.getValue().getOrDefault("S9I", 0.0);
-//                    double snr      = obsSnr9;
-//                    double range    = obsC9;
+                    
+                    double range, snr, ionl, ionp, mp1, mp2;
+                    
+                    if (singleMode.isEmpty()) {
+                        double obsP1    = ea.getValue().getOrDefault("C1P", 0.0);
+                        double obsL1    = ea.getValue().getOrDefault("L1P", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
+                        double obsSnr1  = ea.getValue().getOrDefault("S1P", 0.0);
+                        double obsP2    = ea.getValue().getOrDefault("C2P", 0.0);
+                        double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
+                        double obsSnr2  = ea.getValue().getOrDefault("S2P", 0.0);
+                        double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
+                        double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
+                        
+                        snr   = Math.min(obsSnr1, obsSnr2);
+                        range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+                        ionl  = obsL1 - obsL2;
+                        ionp  = obsP2 - obsP1;
+                        mp1   = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
+                        mp2   = obsP2 - obsL2 + 2.0 * ionl * f1q / (f2q - f1q);
+                    }
+                    else {
+                        range    = ea.getValue().getOrDefault(singleMode, 0.0);
+                        String snrType = 'S' + singleMode.substring(1, singleMode.length());
+                        snr  = ea.getValue().getOrDefault(snrType, 0.0);
+                        ionl = 0.0; 
+                        ionp = 0.0; 
+                        mp1 = 0.0; 
+                        mp2 = 0.0;
+                    }
+                    
                     
 //                    double obsP1    = ea.getValue().getOrDefault("P1", 0.0);
 //                    double obsL1    = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
@@ -254,44 +339,22 @@ public class CalcObject {
 //                    double obsL2    = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
 //                    double obsSnr2  = ea.getValue().getOrDefault("S2", 0.0);
 
-                    double obsP1    = ea.getValue().getOrDefault("C1P", 0.0);
-                    double obsL1    = ea.getValue().getOrDefault("L1P", 0.0) * GiModel.CVEL / object[NAVMAP_L1];
-                    double obsSnr1  = ea.getValue().getOrDefault("S1P", 0.0);
-                    double obsP2    = ea.getValue().getOrDefault("C2P", 0.0);
-                    double obsL2    = ea.getValue().getOrDefault("L2P", 0.0) * GiModel.CVEL / object[NAVMAP_L2];
-                    double obsSnr2  = ea.getValue().getOrDefault("S2P", 0.0);
                     
 //                    if (obsP1 != 0.0) {
-//                        obsP1 += 262.140;
+//                        obsP1 += -250.0;
 //                    }
 //                    
 //                    if (obsP2 != 0.0) {
-//                        obsP2 += 256.753 + 1.40;
+//                        obsP2 += -270.606;
 //                    }
                     
 //                    double snr      = obsSnr1;
 //                    double range    = obsP1;
 
-                    double snr      = Math.min(obsSnr1, obsSnr2);
-                    double f1q      = object[NAVMAP_L1] * object[NAVMAP_L1];
-                    double f2q      = object[NAVMAP_L2] * object[NAVMAP_L2];
-                    double range    = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
-                    double ionl     = obsL1 - obsL2;
-                    double ionp     = obsP2 - obsP1;
-                    double mp1      = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
-                    double mp2      = obsP2 - obsL2 + 2.0 * ionl * f1q / (f2q - f1q);
                     
                     ok = aerv(subject, object, aerv);
-                    elv = aerv[1] * 180.0 / Math.PI;
-
-//                        if (ok) {
-//                            ok = elv > 15.0;
-//                        }
-//                        else {
-//                            ok = true;
-//                        } 
-
-                    if (range != 0.0 && snr > 60.0 && elv > 10.0) {
+                    
+                    if (range != 0.0 && snr >= minSnr && aerv[1] >= minElevation) {
                         
                         //Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;

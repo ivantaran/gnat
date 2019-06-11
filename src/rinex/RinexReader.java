@@ -218,13 +218,17 @@ public class RinexReader {
         setErrorMessasge(errorCode);
     }
     
-    public boolean open(String fileName) {
+    public boolean open(String fileName, String filter) {
         boolean result = true;
         boolean eoh = false;
         
         lineIndex = 0;
         headLines.clear();
         dataLines.clear();
+        
+        if (!filter.isEmpty() && !fileName.contains(filter)) {
+            return result;
+        }
         
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileName));
@@ -290,14 +294,14 @@ public class RinexReader {
         return result;
     }
     
-    public void openDir(String dir) {
+    public void openDir(String dir, String filter) {
         try {
             Files.walk(Paths.get(dir))
                     .filter(path -> 
                             Files.isRegularFile(path) && Files.isReadable(path)
                     )
                     .forEach(path -> {
-                        open(path.toAbsolutePath().toString());
+                        open(path.toAbsolutePath().toString(), filter);
                         System.out.println(getErrorMessasge());
                     });
         } catch (IOException ex) {
