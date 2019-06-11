@@ -93,7 +93,7 @@ public class MarquardtMin {
             
             if (f1 <= fmnl) {
                 lam /= SCALE;
-                System.arraycopy(x, 0, co.getPosition(), 0, Math.min(x.length, co.getPosition().length));
+                co.setPosition(x, x.length);
                 fmn = f1;
                 ok = true;
             }
@@ -119,13 +119,13 @@ public class MarquardtMin {
         
         double lla[] = {0.0, 0.0, 0.0};
         
-        NavUtils.ecefToLla(x, lla);
+        NavUtils.ecefToLatLonAlt(x, lla);
         for (int j = 0; j < POSITION_SIZE; j++) {
             System.out.println(x[j]);
         }
         System.out.println();
-        System.out.println(lla[0] * 180.0 / Math.PI);
-        System.out.println(lla[1] * 180.0 / Math.PI);
+        System.out.println(Math.toDegrees(lla[0]));
+        System.out.println(Math.toDegrees(lla[1]));
         System.out.println(lla[2]);
         
         return result;

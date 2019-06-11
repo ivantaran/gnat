@@ -11,9 +11,9 @@ package rinex;
 public class ObserveSample {
     private String name;
     private double[] data;
-    private double time;
+    private long time;
 
-    public ObserveSample(String name, double time, double[] data) {
+    public ObserveSample(String name, long time, double[] data) {
         this.name = name;
         this.time = time;
         this.data = data;
@@ -51,14 +51,14 @@ public class ObserveSample {
     /**
      * @return the time
      */
-    public double getTime() {
+    public long getTimeInMillis() {
         return time;
     }
 
     /**
      * @param time the time to set
      */
-    public void setTime(double time) {
+    public void setTimeInMillis(long time) {
         this.time = time;
     }
 }

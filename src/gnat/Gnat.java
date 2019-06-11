@@ -23,7 +23,7 @@ public class Gnat {
     }
     
     private static final void printMode(CalcObject co) {
-        System.out.printf("Step Time [s]:       %1.3f\n", co.getStepTime());
+        System.out.printf("Step Time [ms]:      %d\n", co.getStepTime());
         System.out.printf("Min Elevation [deg]: %1.1f\n", Math.toDegrees(co.getMinElevation()));
         System.out.printf("Min SNR [dB/Hz]:     %1.1f\n", co.getMinSnr());
         System.out.printf("Single Mode:         %s\n", co.getSingleMode());
@@ -35,7 +35,7 @@ public class Gnat {
         String path = "";
         String single = "";
         
-        Double step = null;
+        Long step = null;
         Double minelv = null;
         Double minsnr = null;
         
@@ -58,7 +58,7 @@ public class Gnat {
                 }
                 else if (s.contains(ARG_STEP)) {
                     s = s.replaceFirst(ARG_FILTER, "");
-                    step = Double.valueOf(s);
+                    step = Long.valueOf(s);
                 }
                 else if (s.contains(ARG_MINELV)) {
                     s = s.replaceFirst(ARG_MINELV, "");
@@ -81,7 +81,7 @@ public class Gnat {
         RinexReader rnx = new RinexReader();
         
         rnx.openDir(path, filter);
-        
+
         if (rnx.observeReader != null) {
 //            rnx.observeReader.save();
         }
@@ -109,7 +109,9 @@ public class Gnat {
             
             co.addGlonassNavDataList(rnx.gnd_tmp.getNavDataList());
 
-            co.setPositionXyz(rnx.observeReader.getApproxPositionXyz());
+            double p[] = rnx.observeReader.getApproxPositionXyz();
+            co.setPosition(p, p.length);
+
             co.addObservesMap(rnx.observeReader.getObjectMap());
             co.saveDelta("delta.txt");
             
