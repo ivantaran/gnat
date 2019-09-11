@@ -19,7 +19,7 @@ import rinex.ObserveObject;
 public class CalcObject {
 
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static int DELTA_WIDTH = 11;
+    private final static int DELTA_WIDTH = 12;
     private final static int DELTA_DX   = 0;
     private final static int DELTA_DY   = 1;
     private final static int DELTA_DZ   = 2;
@@ -31,8 +31,9 @@ public class CalcObject {
     private final static int DELTA_IONL = 8;
     private final static int DELTA_AZM  = 9;
     private final static int DELTA_ELV  = 10;
+    private final static int DELTA_LETTER = 11;
     
-    private final static int NAVMAP_WIDTH = 10;
+    private final static int NAVMAP_WIDTH = 11;
     private final static int NAVMAP_X   = 0;
     private final static int NAVMAP_Y   = 1;
     private final static int NAVMAP_Z   = 2;
@@ -43,6 +44,7 @@ public class CalcObject {
     private final static int NAVMAP_L1  = 7;
     private final static int NAVMAP_L2  = 8;
     private final static int NAVMAP_L3  = 9;
+    private final static int NAVMAP_LETTER = 10;
     
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
     
@@ -233,6 +235,37 @@ public class CalcObject {
     private double[] getMeasureArray(GlonassNavData navData, long deltaMillis, double[] subject, double[] object) {
         double result[] = new double[NAVMAP_WIDTH];
         System.arraycopy(object, 0, result, 0, GlonassSet.VectorLength);
+        
+//        double delta[] = {
+//            -79.0673071686178,
+//            25.1941026295535,
+//            32.5448468383402,
+//            4.83127934595643,
+//        };
+        
+//        double delta[] = {
+//            -80.2795816240832,
+//            25.3151670177467,
+//            32.9462388763204,
+//            3.27752456605481,
+//        };
+        
+//        double delta[] = {
+//            -79.9597806110978,
+//            25.5141559843905,
+//            33.2899224227294,
+//        };
+//        double delta[] = {
+//            1.447510054335,
+//            1.43794029951096,
+//            11.123103953898,
+//            -75514.0353365122,
+//        };
+//        
+//        result[0] += delta[0];
+//        result[1] += delta[1];
+//        result[2] += delta[2];
+        
         double glotime = 0.0; //TODO read from obs file
         result[NAVMAP_T] = (glotime + navData.getTimeOffset() 
                 + navData.getFrequencyOffset() * (double)deltaMillis * 0.001) 
@@ -240,6 +273,8 @@ public class CalcObject {
         result[NAVMAP_L1] = navData.getFrequencyL1() * navData.getFrequencyOffset() + navData.getFrequencyL1();
         result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
         result[NAVMAP_L3] = navData.getFrequencyL3() * navData.getFrequencyOffset() + navData.getFrequencyL3();
+        result[NAVMAP_LETTER] = navData.getFrequencyChannelNumber();
+        
         return result;
     }
     
@@ -398,6 +433,8 @@ public class CalcObject {
                         deltaValues[DELTA_IONL] = ionl;
                         deltaValues[DELTA_AZM] = aerv[0];
                         deltaValues[DELTA_ELV] = aerv[1];
+                        deltaValues[DELTA_LETTER] = object[NAVMAP_LETTER];
+                        
                         deltaRecord.put(ea.getKey(), deltaValues);
                     }
                 }
@@ -551,7 +588,7 @@ public class CalcObject {
                 for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
                     
                     String line = String.format(Locale.ROOT, 
-                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\n", 
+                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%d\n", 
                             tm.getKey(), 
                             entry.getKey(), 
                             entry.getValue()[DELTA_DR], 
@@ -560,7 +597,8 @@ public class CalcObject {
                             entry.getValue()[DELTA_IONP], 
                             entry.getValue()[DELTA_IONL], 
                             entry.getValue()[DELTA_AZM], 
-                            entry.getValue()[DELTA_ELV]
+                            entry.getValue()[DELTA_ELV],
+                            (int)entry.getValue()[DELTA_LETTER]
                     );
                     bw.write(line);
                 }
