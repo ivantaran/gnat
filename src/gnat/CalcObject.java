@@ -255,21 +255,23 @@ public class CalcObject {
 //            25.5141559843905,
 //            33.2899224227294,
 //        };
-//        double delta[] = {
-//            1.447510054335,
-//            1.43794029951096,
-//            11.123103953898,
-//            -75514.0353365122,
-//        };
-//        
-//        result[0] += delta[0];
-//        result[1] += delta[1];
-//        result[2] += delta[2];
+        double delta[] = {
+            -0.020031231455505,
+            -1.34528347291052,
+            12.7677682060748,
+            -75520.8052657702,
+        };
         
         double glotime = 0.0; //TODO read from obs file
         result[NAVMAP_T] = (glotime + navData.getTimeOffset() 
                 + navData.getFrequencyOffset() * (double)deltaMillis * 0.001) 
                 * GiModel.CVEL - subject[3];
+        
+        result[0] += delta[0];
+        result[1] += delta[1];
+        result[2] += delta[2];
+        result[NAVMAP_T] += delta[3];
+        
         result[NAVMAP_L1] = navData.getFrequencyL1() * navData.getFrequencyOffset() + navData.getFrequencyL1();
         result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
         result[NAVMAP_L3] = navData.getFrequencyL3() * navData.getFrequencyOffset() + navData.getFrequencyL3();
@@ -321,7 +323,7 @@ public class CalcObject {
             
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
-//                if (objectName == 19 || objectName == 8) continue;
+                if (objectName == 12 || objectName == 1 || objectName == 10 || objectName == 11 || objectName == 26 || objectName == 14 || objectName == 15 || objectName == 2) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
