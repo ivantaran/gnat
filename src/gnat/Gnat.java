@@ -83,7 +83,7 @@ public class Gnat {
         rnx.openDir(path, filter);
 
         if (rnx.observeReader != null) {
-//            rnx.observeReader.save();
+            rnx.observeReader.save();
         }
         
         if (rnx.gnd_tmp != null) {

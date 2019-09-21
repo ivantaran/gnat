@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -255,22 +256,22 @@ public class CalcObject {
 //            25.5141559843905,
 //            33.2899224227294,
 //        };
-        double delta[] = {
-            -0.020031231455505,
-            -1.34528347291052,
-            12.7677682060748,
-            -75520.8052657702,
-        };
+//        double delta[] = {
+//            -0.020031231455505,
+//            -1.34528347291052,
+//            12.7677682060748,
+//            -75520.8052657702,
+//        };
         
         double glotime = 0.0; //TODO read from obs file
         result[NAVMAP_T] = (glotime + navData.getTimeOffset() 
                 + navData.getFrequencyOffset() * (double)deltaMillis * 0.001) 
                 * GiModel.CVEL - subject[3];
         
-        result[0] += delta[0];
-        result[1] += delta[1];
-        result[2] += delta[2];
-        result[NAVMAP_T] += delta[3];
+//        result[0] += delta[0];
+//        result[1] += delta[1];
+//        result[2] += delta[2];
+//        result[NAVMAP_T] += delta[3];
         
         result[NAVMAP_L1] = navData.getFrequencyL1() * navData.getFrequencyOffset() + navData.getFrequencyL1();
         result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
@@ -323,7 +324,7 @@ public class CalcObject {
             
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
-                if (objectName == 12 || objectName == 1 || objectName == 10 || objectName == 11 || objectName == 26 || objectName == 14 || objectName == 15 || objectName == 2) continue;
+//                if (objectName == 12 || objectName == 1 || objectName == 10 || objectName == 11 || objectName == 26 || objectName == 14 || objectName == 15 || objectName == 2) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
@@ -442,6 +443,52 @@ public class CalcObject {
                 }
             }
         }
+        medianFilterForDelta();
+    }
+    
+    private double median(ArrayList<Double> list) {
+        double value;
+        int center = list.size() / 2;
+        
+        Collections.sort(list);
+        
+        if (center == 0) {
+            value = 0.0;
+        }
+        else if (list.size() % 2 == 0) {
+            value = 0.5 * (list.get(center - 1) + list.get(center));
+        }
+        else {
+            value = list.get(center);
+        }
+        
+        return value;
+    }
+    
+    private void medianFilterForDelta() {
+        ArrayList<Double> listValues = new ArrayList<>();
+        ArrayList<Double> listResiduals = new ArrayList<>();
+        
+        delta.entrySet().forEach(tm -> {
+            tm.getValue().entrySet().forEach(values -> {
+                listValues.add(values.getValue()[DELTA_DR]);
+            });
+        });
+        
+        double med = median(listValues);
+        
+        listValues.forEach(value -> {
+            listResiduals.add(Math.abs(value - med));
+        });
+        
+        double mad = median(listResiduals);
+        double level = mad * 6.0;
+        
+        delta.entrySet().forEach(tm -> {
+            tm.getValue().entrySet().removeIf(
+                values -> (Math.abs(values.getValue()[DELTA_DR] - med) > level)
+            );
+        });
     }
     
     /**
