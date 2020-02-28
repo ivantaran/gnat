@@ -9,7 +9,7 @@ import java.util.HashMap;
  * @author Ivan
  */
 public class HeaderReader {
-    
+
     private double rinex_version = 0.0;
     private String type = "";
     private String system = "";
@@ -26,8 +26,8 @@ public class HeaderReader {
     private String rec_vers = "";
     private String ant_num = "";
     private String ant_type = "";
-    private final double approx_position_xyz[] = {0.0, 0.0, 0.0};
-    private double ant_hen[] = {0.0, 0.0, 0.0};
+    private final double approx_position_xyz[] = { 0.0, 0.0, 0.0 };
+    private double ant_hen[] = { 0.0, 0.0, 0.0 };
     private ArrayList<String> types_of_observ = null;
     private final HashMap<Character, String[]> sys_obs_types = new HashMap();
     private String signal_strength_unit = "";
@@ -37,7 +37,7 @@ public class HeaderReader {
     private ArrayList<String> sys_phase_shift = null;
     private ArrayList<String> glonass_slot_frq = null;
     private ArrayList<String> glonass_cod_phs_bis = null;
-    private int leap_seconds = 0;
+    private int leap_seconds = 0; // TODO !!!
 
     private ArrayList<String> headLines;
     private int lineIndex = 0;
@@ -54,40 +54,45 @@ public class HeaderReader {
         parse();
     }
 
-    
     private void parse() {
         lineIndex = 0;
         while (linesReady()) {
             parseLine();
         }
     }
-    
-    private void parse_rinex_version(String line){
+
+    private void parse_rinex_version(String line) {
         try {
             rinex_version = Double.valueOf(line.substring(0, 9));
             type = line.substring(20, 40);
             system = line.substring(40, 60);
-        }
-        catch (NumberFormatException | IndexOutOfBoundsException e) {
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
             warning(e.getMessage());
         }
     }
-    private void parse_pgm_run_by_date(String line){
+
+    private void parse_pgm_run_by_date(String line) {
     }
-    private void parse_marker_name(String line){
+
+    private void parse_marker_name(String line) {
     }
-    private void parse_marker_number(String line){
+
+    private void parse_marker_number(String line) {
     }
-    private void parse_marker_type(String line){
+
+    private void parse_marker_type(String line) {
     }
-    private void parse_observer_agency(String line){
+
+    private void parse_observer_agency(String line) {
     }
-    private void parse_rec_num_type_vers(String line){
+
+    private void parse_rec_num_type_vers(String line) {
     }
-    private void parse_ant_num_type(String line){
+
+    private void parse_ant_num_type(String line) {
     }
-    
-    private void parse_approx_position_xyz(String line){
+
+    private void parse_approx_position_xyz(String line) {
         String lineValue;
         try {
             lineValue = line.substring(0, 14).trim();
@@ -96,21 +101,21 @@ public class HeaderReader {
             approx_position_xyz[1] = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
             lineValue = line.substring(28, 42).trim();
             approx_position_xyz[2] = lineValue.isEmpty() ? 0.0 : Double.parseDouble(lineValue);
-        }
-        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
             warning(Thread.currentThread().getStackTrace()[1].getMethodName());
             warning(ex.getMessage());
         }
     }
-    
-    private void parse_antenna_delta_hen(String line){
+
+    private void parse_antenna_delta_hen(String line) {
     }
-    private void parse_types_of_observ(int index){
+
+    private void parse_types_of_observ(int index) {
     }
-    
-    private void parse_sys_obs_types(String line){
+
+    private void parse_sys_obs_types(String line) {
         int countLines = 0;
 
         try {
@@ -125,7 +130,7 @@ public class HeaderReader {
             countLines = (count - 1) / 13 + 1;
             String types[] = new String[count];
             int c = 0;
-            
+
             for (int j = 0; j < countLines; j++) {
                 if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SYS_NUM_OBS_TYPES)) {
                     for (int i = 0; i < 13; i++) {
@@ -134,20 +139,17 @@ public class HeaderReader {
                             String type = line.substring(pos, pos + 3).trim();
                             if (!type.isEmpty()) {
                                 types[c] = type;
-                            }
-                            else {
+                            } else {
                                 warning(String.format("Error at line %d", lineIndex));
                                 warning(line);
                                 System.exit(-1);
                             }
                             c++;
-                        }
-                        else {
+                        } else {
                             break;
                         }
                     }
-                }
-                else {
+                } else {
                     warning(String.format("Error at line %d", lineIndex));
                     warning(line);
                     warning(Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -158,23 +160,21 @@ public class HeaderReader {
                 }
             }
             getSysObsTypes().put(sys, types);
-        }
-        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("Error at line %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
             warning(Thread.currentThread().getStackTrace()[1].getMethodName());
         }
     }
-    
-    private void parse_signal_strength_unit(String line){
+
+    private void parse_signal_strength_unit(String line) {
     }
-    
-    private void parse_interval(String line){
+
+    private void parse_interval(String line) {
         try {
             interval = Double.parseDouble(line.substring(0, 10).trim());
-        }
-        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
@@ -182,20 +182,23 @@ public class HeaderReader {
             System.exit(-1);
         }
     }
-    
-    private void parse_time_of_first_obs(String line){
+
+    private void parse_time_of_first_obs(String line) {
     }
-    private void parse_sys_phase_shift(int index){
+
+    private void parse_sys_phase_shift(int index) {
     }
-    private void parse_glonass_slot_frq(int index){
+
+    private void parse_glonass_slot_frq(int index) {
     }
-    private void parse_glonass_cod_phs_bis(int index){
+
+    private void parse_glonass_cod_phs_bis(int index) {
     }
-    private void parse_leap_seconds(String line){
+
+    private void parse_leap_seconds(String line) {
         try {
             leap_seconds = Integer.parseInt(line.substring(0, 6).trim());
-        }
-        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("error at line: %d", lineIndex));
             warning(line);
             warning(ex.getMessage());
@@ -203,72 +206,53 @@ public class HeaderReader {
             System.exit(-1);
         }
     }
-    
+
     private void parseLine() {
         String line = getLine();
-        
+
         if (line.length() <= RinexReader.MARKER_LINE_INDEX) {
             return;
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_RINEX_VERSION)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_RINEX_VERSION)) {
             parse_rinex_version(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_PGM_RUN_BY_DATE)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_PGM_RUN_BY_DATE)) {
             parse_pgm_run_by_date(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_NAME)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_NAME)) {
             parse_marker_name(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_NUMBER)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_NUMBER)) {
             parse_marker_number(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TYPE)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TYPE)) {
             parse_marker_type(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_OBSERVER_AGENCY)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_OBSERVER_AGENCY)) {
             parse_observer_agency(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_REC_NUM_TYPE_VERS)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_REC_NUM_TYPE_VERS)) {
             parse_rec_num_type_vers(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_ANT_NUM_TYPE)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_ANT_NUM_TYPE)) {
             parse_ant_num_type(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_APPROX_POSITION_XYZ)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_APPROX_POSITION_XYZ)) {
             parse_approx_position_xyz(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_ANTENNA_DELTA_HEN)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_ANTENNA_DELTA_HEN)) {
             parse_antenna_delta_hen(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TYPES_OF_OBSERV)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TYPES_OF_OBSERV)) {
             parse_types_of_observ(lineIndex);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SYS_NUM_OBS_TYPES)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SYS_NUM_OBS_TYPES)) {
             parse_sys_obs_types(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SIGNAL_STRENGTH_UNIT)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SIGNAL_STRENGTH_UNIT)) {
             parse_signal_strength_unit(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_INTERVAL)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_INTERVAL)) {
             parse_interval(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TIME_OF_FIRST_OBS)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_TIME_OF_FIRST_OBS)) {
             parse_time_of_first_obs(line);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SYS_PHASE_SHIFT)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_SYS_PHASE_SHIFT)) {
             parse_sys_phase_shift(lineIndex);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_GLONASS_SLOT_FRQ)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_GLONASS_SLOT_FRQ)) {
             parse_glonass_slot_frq(lineIndex);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_GLONASS_COD_PHS_BIS)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_GLONASS_COD_PHS_BIS)) {
             parse_glonass_cod_phs_bis(lineIndex);
-        }
-        else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_LEAP_SECONDS)) {
+        } else if (line.substring(RinexReader.MARKER_LINE_INDEX).contains(RinexReader.MARKER_LEAP_SECONDS)) {
             parse_leap_seconds(line);
         }
     }
-    
+
     private String getLine() {
         String line = "";
         if (lineIndex < headLines.size()) {
@@ -277,7 +261,7 @@ public class HeaderReader {
         }
         return line;
     }
-    
+
     private boolean linesReady() {
         return (lineIndex < headLines.size());
     }

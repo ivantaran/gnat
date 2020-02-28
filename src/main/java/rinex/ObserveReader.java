@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Locale;
 
 /**
  *
@@ -33,48 +32,43 @@ public class ObserveReader {
     private int observeTypeCount = 0;
     private String[] typesObservations;
     private int leapSeconds = 0;
-    private final double[] approxPositionXyz = {0.0, 0.0, 0.0};
+    private final double[] approxPositionXyz = { 0.0, 0.0, 0.0 };
     private String markerName = "";
-    
+
     ObserveReader(HeaderReader headerReader, ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headerReader = headerReader;
         add(headLines, dataLines);
     }
-    
+
     public final void add(ArrayList<String> headLines, ArrayList<String> dataLines) {
         this.headLines = headLines;
         this.dataLines = dataLines;
         parse();
     }
-    
+
     private long getTimeInMillis(String line) {
         long result = -1;
-        
+
         if (line.length() > 25) {
             try {
-                int year = Integer.parseInt(line.substring(1, 3).trim()) + 
-                        (baseDate.get(Calendar.YEAR) / 100) * 100;
+                int year = Integer.parseInt(line.substring(1, 3).trim()) + (baseDate.get(Calendar.YEAR) / 100) * 100;
                 int month = Integer.parseInt(line.substring(4, 6).trim()) - 1;
                 int day = Integer.parseInt(line.substring(7, 9).trim());
                 int hour = Integer.parseInt(line.substring(10, 12).trim());
                 int minute = Integer.parseInt(line.substring(13, 15).trim());
                 double second = Double.parseDouble(line.substring(15, 26).trim());
-                long millis = (long)(second * 1000.0);
-                Calendar date = new GregorianCalendar(year, month, day, hour, 
-                        minute);
-                result = date.getTimeInMillis() + millis 
-                        - getHeaderReader().getLeapSeconds() * 1000L;
-            }
-            catch (NumberFormatException e) {
+                long millis = (long) (second * 1000.0);
+                Calendar date = new GregorianCalendar(year, month, day, hour, minute);
+                result = date.getTimeInMillis() + millis - getHeaderReader().getLeapSeconds() * 1000L;
+            } catch (NumberFormatException e) {
                 warning(String.format("NumberFormatException at line %d", getLineIndex()));
                 warning(line);
                 warning(e.getMessage());
             }
-        }
-        else {
+        } else {
             warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
         }
-        
+
         return result;
     }
 
@@ -99,96 +93,90 @@ public class ObserveReader {
         }
     }
 
-    
     /**
      * @return the approxPositionXyz
      */
     public double[] getApproxPositionXyz() {
         return approxPositionXyz;
     }
-    
+
     /**
      * @return the flag
      */
     private int getFlag(String line) {
         int result = -1;
-        
+
         try {
             result = Integer.valueOf(line.substring(28, 29));
-        }
-        catch (IndexOutOfBoundsException | NumberFormatException ex) {
+        } catch (IndexOutOfBoundsException | NumberFormatException ex) {
             warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
             warning(line);
             warning(ex.getMessage());
         }
-        
+
         return result;
     }
-    
+
     private int getObjectCount(String line) {
         int result = 0;
-        
+
         if (line.length() > 30) {
             result = Integer.valueOf(line.substring(29, 32).trim());
+        } else {
+            warning(String.format("Line index %d length = %d.", getLineIndex(), line.length()));
         }
-        else {
-            warning(String.format("Line index %d length = %d.", getLineIndex(), 
-                    line.length()));
-        }
-        
+
         return result;
     }
-    
+
     protected void newObserve(String name, long time) {
         double data[] = new double[observeTypeCount];
         getObserve().add(new ObserveSample(name, time, data));
     }
-    
+
     protected void addObservations() {
         ObserveObject object;
-        
+
         for (ObserveSample observeData : getObserve()) {
             String name = observeData.getName();
 
             if (getObjectMap().containsKey(name)) {
                 object = getObjectMap().get(name);
-            }
-            else {
+            } else {
                 object = new ObserveObject(name);
                 getObjectMap().put(name, object);
             }
-            
+
             object.putObsData(observeData.getTimeInMillis(), typesObservations, observeData.getData());
         }
-        
+
     }
-    
+
     protected void readObservesHeader() {
         long time;
         int flag;
         int count;
         int objectLineCount;
         int indexObject = 0;
-        
+
         getObserve().clear();
-        
+
         String line = getLine();
         flag = getFlag(line);
-        
-        if (flag == FLAG_OK) {
+
+        if (flag == FLAG_OK || flag == FLAG_POWER_FAILURE) {
             time = getTimeInMillis(line);
             count = getObjectCount(line);
             objectLineCount = (count - 1) / 12 + 1;
-            
+
             for (int j = 0; j < objectLineCount; ++j) {
                 for (int i = 0; (i < 12) && (indexObject < count); ++i, ++indexObject) {
                     int objectNamePosition = 32 + i * 3;
                     if (objectNamePosition + 1 < line.length()) {
                         String name = line.substring(objectNamePosition, objectNamePosition + 3);
                         newObserve(name, time);
-    //                    warning(name);
-                    }
-                    else {
+                        // warning(name);
+                    } else {
                         warning(String.format("error at line %d", getLineIndex()));
                         warning(line);
                         System.exit(-1);
@@ -198,8 +186,7 @@ public class ObserveReader {
                     line = getLine();
                 }
             }
-        }
-        else {
+        } else {
             if (flag == FLAG_HEADER || flag == FLAG_EXTEVENT) {
                 warning(String.format("flag at line: %d", getLineIndex()));
                 warning(line);
@@ -208,34 +195,32 @@ public class ObserveReader {
                     getLine();
                     c--;
                 }
-            }
-            else {
-                warning(String.format("flag at line: %d", getLineIndex()));
+            } else {
+                warning(String.format("flag %d at line: %d", flag, getLineIndex()));
                 warning(line);
             }
-            //TODO write all flags
+            // TODO write all flags
         }
     }
-    
+
     protected void readObservations() {
-        int observeLineCount = (observeTypeCount - 1)/5 + 1;
+        int observeLineCount = (observeTypeCount - 1) / 5 + 1;
         int indexObserve;
         int valuePosition;
         String lineValue;
         double value;
         int lli, ps; // TODO use lli and ps
-        
+
         for (ObserveSample data : getObserve()) {
             indexObserve = 0;
             for (int j = 0; j < observeLineCount; ++j) {
                 String line = getLine();
                 for (int i = 0; (i < 5) && (indexObserve < observeTypeCount); ++i, ++indexObserve) {
                     valuePosition = 16 * i;
-                    if (valuePosition + 14 <= line.length()) { //TODO check +14 value
+                    if (valuePosition + 14 <= line.length()) { // TODO check +14 value
                         lineValue = line.substring(valuePosition, valuePosition + 14).trim();
                         value = (lineValue.isEmpty()) ? 0.0 : Double.valueOf(lineValue);
-                    }
-                    else {
+                    } else {
                         value = 0.0;
                     }
 
@@ -243,35 +228,33 @@ public class ObserveReader {
                     if (valuePosition + 1 <= line.length()) {
                         lineValue = line.substring(valuePosition, valuePosition + 1).trim();
                         lli = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
-                    }
-                    else {
+                    } else {
                         lli = 0;
                     }
-                    
+
                     valuePosition += 1;
                     if (valuePosition + 1 <= line.length()) {
                         lineValue = line.substring(valuePosition, valuePosition + 1).trim();
                         ps = (lineValue.isEmpty()) ? 0 : Integer.valueOf(lineValue);
-                    }
-                    else {
+                    } else {
                         ps = 0;
                     }
-                    
-//                    if (lli != 0) {
-//                        System.out.printf(Locale.ROOT, "lli[%.3f]: %d\n", value, lli);
-//                    }
-                    
+
+                    // if (lli != 0) {
+                    // System.out.printf(Locale.ROOT, "lli[%.3f]: %d\n", value, lli);
+                    // }
+
                     data.getData()[indexObserve] = value;
                 }
             }
         }
     }
-    
+
     private void parseTypesOfObserv(int index, int count) {// TODO make return result
         int typesLineCount = (count - 1) / 9 + 1;
         int indexType = 0;
         String line;
-        
+
         typesObservations = new String[count];
         for (int j = 0; j < typesLineCount; ++j) {
             line = headLines.get(index + j);
@@ -282,7 +265,7 @@ public class ObserveReader {
             }
         }
     }
-    
+
     protected boolean parseHeader() {
         boolean result = true;
         int index;
@@ -303,78 +286,72 @@ public class ObserveReader {
                 warning(e.getMessage());
                 result = false;
             }
-        }
-        else {
+        } else {
             warning("MARKER_TYPES_OF_OBSERV not found");
             result = false;
         }
-        
+
         if (result) {
             index = RinexReader.getMarkerIndex(RinexReader.MARKER_TIME_OF_FIRST_OBS, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 try {
-                    int year  = Integer.parseInt(line.substring( 0,  6).trim());
-                    int month = Integer.parseInt(line.substring( 6, 12).trim());
-                    int day   = Integer.parseInt(line.substring(12, 18).trim());
-                    int hour  = Integer.parseInt(line.substring(18, 24).trim());
-                    //check rinex manual
+                    int year = Integer.parseInt(line.substring(0, 6).trim());
+                    int month = Integer.parseInt(line.substring(6, 12).trim());
+                    int day = Integer.parseInt(line.substring(12, 18).trim());
+                    int hour = Integer.parseInt(line.substring(18, 24).trim());
+                    // check rinex manual
                     int minute = Integer.parseInt(line.substring(24, 30).trim());
                     baseFracSecond = Double.parseDouble(line.substring(30, 43).trim());
-                    int second = (int)baseFracSecond;
+                    int second = (int) baseFracSecond;
                     baseFracSecond -= second;
-                    //check time millis
+                    // check time millis
                     baseDate = new GregorianCalendar(year, month, day, hour, minute, second);
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     warning(String.format("NumberFormatException at header line %d", index));
                     warning(line);
                     warning(e.getMessage());
                     result = false;
                 }
-            }
-            else {
+            } else {
                 warning("MARKER_TIME_OF_FIRST_OBS not found");
                 result = false;
             }
-            
+
             index = RinexReader.getMarkerIndex(RinexReader.MARKER_LEAP_SECONDS, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 try {
                     line = line.substring(0, 6).trim();
                     leapSeconds = line.length() > 0 ? Integer.parseInt(line) : 0;
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     warning(String.format("NumberFormatException at header line %d", index));
                     warning(line);
                     warning(e.getMessage());
                     result = false;
                 }
-            }
-            else {
+            } else {
                 leapSeconds = 0;
-            } 
+            }
         }
-        
+
         if (result) {
             index = RinexReader.getMarkerIndex(RinexReader.MARKER_NAME, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 setMarkerName(line.substring(0, 60).trim());
-            }
-            else {
+            } else {
                 warning("MARKER_NAME not found");
                 result = false;
             }
         }
-        
+
         if (result) {
             index = RinexReader.getMarkerIndex(RinexReader.MARKER_APPROX_POSITION_XYZ, headLines);
             if (index > -1) {
                 line = headLines.get(index);
                 try {
-                    approxPositionXyz[0] = Double.parseDouble(line.substring( 0, 14));
+                    approxPositionXyz[0] = Double.parseDouble(line.substring(0, 14));
                     approxPositionXyz[1] = Double.parseDouble(line.substring(14, 28));
                     approxPositionXyz[2] = Double.parseDouble(line.substring(28, 42));
                 } catch (NumberFormatException e) {
@@ -383,16 +360,15 @@ public class ObserveReader {
                     warning(e.getMessage());
                     result = false;
                 }
-            }
-            else {
+            } else {
                 warning("MARKER_APPROX_POSITION_XYZ not found");
                 result = false;
             }
         }
-        
+
         return result;
     }
-    
+
     private void parse() {
         lineIndex = 0;
         boolean result = parseHeader();
@@ -402,12 +378,11 @@ public class ObserveReader {
                 readObservations();
                 addObservations();
             }
-        }
-        else {
+        } else {
             warning("Bad header");
         }
     }
-    
+
     protected String getLine() {
         String line = "";
         if (getLineIndex() < dataLines.size()) {
@@ -416,15 +391,15 @@ public class ObserveReader {
         }
         return line;
     }
-    
+
     protected void warning(String message) {
         System.out.println(message);
     }
-    
+
     private boolean linesReady() {
         return (getLineIndex() < dataLines.size());
     }
-    
+
     public void save() {
         getObjectMap().entrySet().forEach((entry) -> {
             String string = entry.getKey();

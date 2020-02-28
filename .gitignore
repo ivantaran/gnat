@@ -1,7 +1,4 @@
-/dist/
-/build/
-/nbproject/
-*.txt
-*.xml
-*.gnd
-*.iml
+*
+!src
+!src/**
+!pom.xml
