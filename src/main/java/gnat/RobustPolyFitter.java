@@ -9,14 +9,13 @@ package gnat;
  * @author Taran
  */
 public class RobustPolyFitter extends PolyFitter {
-    
+
     private final static int COUNT_OF_ITERATIONS = 6;
-    
+
     public RobustPolyFitter(double[] data, int order, int index, int length) {
         super(data, order, index, length);
     }
 
-    
     private int weights(double[] r, double[] w, double mean) {
         int err = 0;
         mean = Statistics.mean(r);
@@ -26,8 +25,7 @@ public class RobustPolyFitter extends PolyFitter {
             if (Math.abs(r[i]) > m) {
                 w[i] = 0.0;
                 err++;
-            }
-            else {
+            } else {
                 if ((w[i] > Double.MIN_VALUE) && (m > Double.MIN_VALUE)) {
                     w[i] = Math.pow(1 - Math.pow(r[i] / m, 2), 2);
                 }
@@ -36,17 +34,17 @@ public class RobustPolyFitter extends PolyFitter {
 
         return err;
     }
-    
+
     @Override
     public double[] getResult() {
         boolean ok;
         int n = 0;
         double mean;
         double[] result = new double[length];
-        double[][] m   = Blas.getMatrix(length, order);
-        double[][] mw  = Blas.getMatrix(order, length);
+        double[][] m = Blas.getMatrix(length, order);
+        double[][] mw = Blas.getMatrix(order, length);
         double[][] qim = Blas.getMatrix(order, length);
-        double[][] q  = Blas.getMatrix(order, order);
+        double[][] q = Blas.getMatrix(order, order);
         double[][] qi = Blas.getMatrix(order, order);
         double[] x = Blas.getVector(length);
         double[] w = Blas.getVector(length);
@@ -56,10 +54,9 @@ public class RobustPolyFitter extends PolyFitter {
         makeScale();
         fillx(x, scaleMean, scaleStdDev, length);
 
-
         for (int i = 0; i < order; i++)
             filly(x, mw[i], i, length);
-        
+
         Blas.trp(mw, m);
 
         for (int j = 0; j < COUNT_OF_ITERATIONS; j++) {
@@ -75,12 +72,11 @@ public class RobustPolyFitter extends PolyFitter {
                 mean = Statistics.mean(r);
                 Blas.mul(r, w, r);
                 n = weights(r, w, mean);
-            }
-            else {
+            } else {
                 break;
             }
         }
-        
+
         return result;
     }
 
