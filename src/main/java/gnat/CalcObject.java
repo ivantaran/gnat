@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import rinex.GlonassNavData;
 import rinex.ObserveObject;
@@ -65,6 +67,7 @@ public class CalcObject {
     private final HashMap<Integer, TreeMap<Long, double[]>> navMap = new HashMap();
     private final HashMap<Integer, TreeMap<Long, double[]>> delta = new HashMap();
     private final HashMap<String, ObserveObject> obsMap = new HashMap();
+    private HashSet<Integer> m_letters = new HashSet();
 
     CalcObject() {
 
@@ -78,6 +81,11 @@ public class CalcObject {
     public final void setPositionOffset(double[] positionOffset) {
         System.arraycopy(positionOffset, 0, m_positionOffset, 0,
                 Math.min(positionOffset.length, m_positionOffset.length));
+    }
+    
+    public void setLetters(HashSet<Integer> letters) {
+        m_letters.clear();
+        m_letters.addAll(letters);
     }
 
     /**
@@ -338,6 +346,10 @@ public class CalcObject {
                     double object[] = b.get(ea.getKey());
 
                     if (object == null) {
+                        continue;
+                    }
+                    
+                    if (m_letters.size() > 0 && !m_letters.contains((int)object[NAVMAP_LETTER])) {
                         continue;
                     }
 

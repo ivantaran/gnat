@@ -1,6 +1,8 @@
 
 package gnat;
 
+import java.util.HashSet;
+
 import rinex.RinexReader;
 
 /**
@@ -13,13 +15,14 @@ public class Gnat {
      * @param args the command line arguments
      */
     private static final String ARG_FILTER = "--filter=";
-    private static final String ARG_STEP = "--step=";
+    private static final String ARG_LETTERS = "--letters=";
     private static final String ARG_MINELV = "--minelv=";
     private static final String ARG_MINSNR = "--minsnr=";
-    private static final String ARG_SINGLE = "--single=";
     private static final String ARG_OBSNAMES1 = "--obsnames1=";
     private static final String ARG_OBSNAMES2 = "--obsnames2=";
     private static final String ARG_POSOFFSET = "--posoffset=";
+    private static final String ARG_SINGLE = "--single=";
+    private static final String ARG_STEP = "--step=";
 
     private static final void printUsage() {
         System.out.println("Usage:\njava Gnat.jar --filter=SUBSTRING /my/path");
@@ -35,11 +38,12 @@ public class Gnat {
 
     public static void main(String[] args) {
         String filter = "";
-        String path = "";
-        String single = "";
+        String letters = "";
         String obsnames1 = "";
         String obsnames2 = "";
+        String path = "";
         String posoffset = "";
+        String single = "";
 
         Long step = null;
         Double minelv = null;
@@ -61,6 +65,8 @@ public class Gnat {
             for (String s : args) {
                 if (s.contains(ARG_FILTER)) {
                     filter = s.replaceFirst(ARG_FILTER, "");
+                } else if (s.contains(ARG_LETTERS)) {
+                    letters = s.replaceFirst(ARG_LETTERS, "");
                 } else if (s.contains(ARG_STEP)) {
                     s = s.replaceFirst(ARG_FILTER, "");
                     step = Long.valueOf(s);
@@ -97,6 +103,20 @@ public class Gnat {
             // rnx.gnd_tmp.save();
 
             CalcObject co = new CalcObject();
+
+            if (!letters.isEmpty()) {
+                try {
+                    String[] list = letters.split("[ ,;]");
+                    HashSet<Integer> lettersSet = new HashSet();
+                    for (int i = 0; i < list.length; i++) {
+                        lettersSet.add(Integer.parseInt(list[i]));
+                    }
+                    co.setLetters(lettersSet);
+                } catch (NumberFormatException ex) {
+                    System.out.println(letters);
+                    System.out.println(ex.getMessage());
+                }
+            }
 
             if (step != null) {
                 co.setStepTime(step);
