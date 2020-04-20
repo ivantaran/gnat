@@ -22,7 +22,7 @@ import rinex.ObserveObject;
 public class CalcObject {
 
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static int DELTA_WIDTH = 12;
+    private final static int DELTA_WIDTH = 13;
     private final static int DELTA_DX = 0;
     private final static int DELTA_DY = 1;
     private final static int DELTA_DZ = 2;
@@ -34,7 +34,8 @@ public class CalcObject {
     private final static int DELTA_IONL = 8;
     private final static int DELTA_AZM = 9;
     private final static int DELTA_ELV = 10;
-    private final static int DELTA_LETTER = 11;
+    private final static int DELTA_VELOCITY = 11;
+    private final static int DELTA_LETTER = 12;
 
     private final static int NAVMAP_WIDTH = 11;
     private final static int NAVMAP_X = 0;
@@ -311,7 +312,7 @@ public class CalcObject {
 
     private void updateObserves(double[] subject) {
         int objectName;
-        double[] aerv = new double[3];
+        double[] aerv = new double[4];
         boolean ok;
 
         delta.clear();
@@ -402,15 +403,16 @@ public class CalcObject {
 
                     // double snr = obsSnr1;
                     // double range = obsP1;
-
-                    ok = aerv(subject, object, aerv);
+                    double tmp[] = {subject[0], subject[1], subject[2], 0.0, 0.0, 0.0};
+                    ok = aerv(tmp, object, aerv);
 
                     if (range != 0.0 && snr >= minSnr && aerv[1] >= minElevation) {
 
                         double tropo = TroposphericDelay.getRangeCorrection(getLatitude(), getAltitude(), aerv[1],
                                 ea.getKey());
                         range -= tropo;
-
+                        // range += (double)(ea.getKey() - 1585785600000L) * (20.0 / (86400.0 * 4.0 - 2.0 * 3600.0)) * 0.001;
+                        // range += (double)(ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
                         // Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
                         double x = object[NAVMAP_X] * Math.cos(theta) - object[NAVMAP_Y] * Math.sin(theta);
@@ -433,6 +435,7 @@ public class CalcObject {
                         deltaValues[DELTA_IONL] = ionl;
                         deltaValues[DELTA_AZM] = aerv[0];
                         deltaValues[DELTA_ELV] = aerv[1];
+                        deltaValues[DELTA_VELOCITY] = aerv[3];
                         deltaValues[DELTA_LETTER] = object[NAVMAP_LETTER];
 
                         deltaRecord.put(ea.getKey(), deltaValues);
@@ -495,7 +498,7 @@ public class CalcObject {
     public boolean aerv(double[] subject, double[] object, double[] aerv) {
         double[][] m = new double[3][3];
         double[] d = new double[3];
-        double[] dlt = new double[Math.min(Math.min(subject.length, object.length), aerv.length)];
+        double[] dlt = new double[Math.min(subject.length, object.length)];
         double p = Math.sqrt(subject[0] * subject[0] + subject[1] * subject[1]);
         double r = Math.sqrt(subject[0] * subject[0] + subject[1] * subject[1] + subject[2] * subject[2]);
 
@@ -528,23 +531,13 @@ public class CalcObject {
         double s = d[2] / Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
 
         aerv[1] = (s == 1.0) ? 0.5 * Math.PI : Math.atan(s / Math.sqrt(1.0 - s * s));
+        aerv[0] = Math.atan2(d[0], d[1]);
 
-        if (d[1] == 0.0) {
-            aerv[0] = (d[0] > 0.0) ? 0.5 * Math.PI : 1.5 * Math.PI;
-            return true;
+        if (aerv[0] < 0.0) {
+            aerv[0] += 2.0 * Math.PI;
         }
 
-        aerv[0] = Math.atan(d[0] / d[1]);
-
-        if (d[1] < 0.0) {
-            aerv[0] += Math.PI;
-        } else {
-            if (d[0] < 0.0) {
-                aerv[0] += 2.0 * Math.PI;
-            }
-        }
-
-        if (dlt.length >= 6) {
+        if (aerv.length >= 4 && dlt.length >= 6) {
             aerv[3] = (dlt[0] * dlt[3] + dlt[1] * dlt[4] + dlt[2] * dlt[5]) / aerv[2];
         }
 
@@ -615,11 +608,11 @@ public class CalcObject {
                 for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
 
                     String line = String.format(Locale.ROOT,
-                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%d\n", tm.getKey(),
+                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%d\n", tm.getKey(),
                             entry.getKey(), entry.getValue()[DELTA_DR], entry.getValue()[DELTA_MP1],
                             entry.getValue()[DELTA_MP2], entry.getValue()[DELTA_IONP], entry.getValue()[DELTA_IONL],
-                            entry.getValue()[DELTA_AZM], entry.getValue()[DELTA_ELV],
-                            (int) entry.getValue()[DELTA_LETTER]);
+                            entry.getValue()[DELTA_AZM], entry.getValue()[DELTA_ELV], entry.getValue()[DELTA_VELOCITY],
+                            (int)entry.getValue()[DELTA_LETTER]);
                     bw.write(line);
                 }
             }
@@ -640,7 +633,7 @@ public class CalcObject {
         double value;
         int c = 0;
 
-        updateNavData(subject);
+        updateNavData(subject); // TODO: make subject as 7d vector xvt
         updateObserves(subject);
 
         for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : delta.entrySet()) {
