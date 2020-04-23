@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import rinex.GlonassNavData;
 import rinex.ObserveObject;
@@ -57,6 +56,9 @@ public class CalcObject {
     private long endTime = 900000;
     private double minSnr = 45.0;
     private double minElevation = Math.toRadians(10.0);
+    private double m_clockCorrectionRateMs = 0.0;
+    private double m_medianFilterThreshold = 6.0;
+    private long m_clockCorrectionBaseTimeMs = 0;
     private String singleMode = "";
     private final String m_observationsNames1[] = { "C1P", "L1P", "S1P" };
     private final String m_observationsNames2[] = { "C2P", "L2P", "S2P" };
@@ -74,6 +76,15 @@ public class CalcObject {
 
     }
 
+    public final void setMedianFilterThreshold(double threshold) {
+        m_medianFilterThreshold = threshold;
+    }
+
+    public final void setClockCorrection(double rateMetersInMillis, long baseTimeInMillis) {
+        m_clockCorrectionRateMs = rateMetersInMillis;
+        m_clockCorrectionBaseTimeMs = baseTimeInMillis;
+    }
+
     public final void setPosition(double[] position) {
         System.arraycopy(position, 0, m_position, 0, Math.min(position.length, m_position.length));
         NavUtils.ecefToLatLonAlt(m_position, m_latLonAlt);
@@ -83,7 +94,7 @@ public class CalcObject {
         System.arraycopy(positionOffset, 0, m_positionOffset, 0,
                 Math.min(positionOffset.length, m_positionOffset.length));
     }
-    
+
     public void setLetters(HashSet<Integer> letters) {
         m_letters.clear();
         m_letters.addAll(letters);
@@ -349,8 +360,8 @@ public class CalcObject {
                     if (object == null) {
                         continue;
                     }
-                    
-                    if (m_letters.size() > 0 && !m_letters.contains((int)object[NAVMAP_LETTER])) {
+
+                    if (m_letters.size() > 0 && !m_letters.contains((int) object[NAVMAP_LETTER])) {
                         continue;
                     }
 
@@ -403,7 +414,7 @@ public class CalcObject {
 
                     // double snr = obsSnr1;
                     // double range = obsP1;
-                    double tmp[] = {subject[0], subject[1], subject[2], 0.0, 0.0, 0.0};
+                    double tmp[] = { subject[0], subject[1], subject[2], 0.0, 0.0, 0.0 };
                     ok = aerv(tmp, object, aerv);
 
                     if (range != 0.0 && snr >= minSnr && aerv[1] >= minElevation) {
@@ -411,8 +422,16 @@ public class CalcObject {
                         double tropo = TroposphericDelay.getRangeCorrection(getLatitude(), getAltitude(), aerv[1],
                                 ea.getKey());
                         range -= tropo;
-                        // range += (double)(ea.getKey() - 1585785600000L) * (20.0 / (86400.0 * 4.0 - 2.0 * 3600.0)) * 0.001;
-                        // range += (double)(ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
+
+                        // range += (double)(ea.getKey() - 1585785600000L) * (20.0 / (86400.0 * 4.0 -
+                        // 2.0 * 3600.0)) * 0.001;
+                        // range += (double) (ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
+                        // range += (double) (ea.getKey() - 1578009600000L) * (121.0 / 86400.0 / 12.0) *
+                        // 0.001;
+                        if (m_clockCorrectionRateMs != 0.0) {
+                            range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
+                        }
+
                         // Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
                         double x = object[NAVMAP_X] * Math.cos(theta) - object[NAVMAP_Y] * Math.sin(theta);
@@ -480,7 +499,7 @@ public class CalcObject {
         });
 
         double mad = median(listResiduals);
-        double level = mad * 6.0;
+        double level = mad * m_medianFilterThreshold;
 
         delta.entrySet().forEach(tm -> {
             tm.getValue().entrySet().removeIf(values -> (Math.abs(values.getValue()[DELTA_DR] - med) > level));
@@ -612,7 +631,7 @@ public class CalcObject {
                             entry.getKey(), entry.getValue()[DELTA_DR], entry.getValue()[DELTA_MP1],
                             entry.getValue()[DELTA_MP2], entry.getValue()[DELTA_IONP], entry.getValue()[DELTA_IONL],
                             entry.getValue()[DELTA_AZM], entry.getValue()[DELTA_ELV], entry.getValue()[DELTA_VELOCITY],
-                            (int)entry.getValue()[DELTA_LETTER]);
+                            (int) entry.getValue()[DELTA_LETTER]);
                     bw.write(line);
                 }
             }

@@ -45,7 +45,7 @@ public class RinexReader {
 
     public GlonassNavDataReader gnd_tmp;
     public ObserveReader observeReader;
-    private final double[] version_list = { 2.00, 2.01, 2.10, 2.11, 3.02, 3.03 };
+    private final double[] version_list = { 2.00, 2.01, 2.10, 2.11, 3.02, 3.03, 3.04 };
     private final char[] type_list;
     private final char[] system_list;
     private char type = ' ';
