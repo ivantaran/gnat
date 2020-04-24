@@ -7,7 +7,7 @@ import java.util.Locale;
  * @author Taran
  */
 public class MarquardtMin {
-    private final static double EPS = 1.0e-8;
+    private final static double EPS = 1.0e-4;
     private final static double TOLERANCE = 1.0e-15;
     private final static double SCALE = 0.5 * (Math.sqrt(5.0) + 1.0);
     private final static int COUNT = 10;
