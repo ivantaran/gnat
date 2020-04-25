@@ -55,7 +55,8 @@ public class CalcObject {
     private long startTime = -900000;
     private long endTime = 900000;
     private double minSnr = 45.0;
-    private double minElevation = Math.toRadians(10.0);
+    private double m_minElevation = Math.toRadians(10.0);
+    private double m_maxElevation = Math.toRadians(90.0);
     private double m_clockCorrectionRateMs = 0.0;
     private double m_medianFilterThreshold = 6.0;
     private long m_clockCorrectionBaseTimeMs = 0;
@@ -148,14 +149,22 @@ public class CalcObject {
      * @return the minElevation
      */
     public double getMinElevation() {
-        return minElevation;
+        return m_minElevation;
+    }
+
+    public double getMaxElevation() {
+        return m_maxElevation;
     }
 
     /**
      * @param minElevation the minElevation to set
      */
     public void setMinElevation(double minElevation) {
-        this.minElevation = minElevation;
+        m_minElevation = minElevation;
+    }
+
+    public void setMaxElevation(double maxElevation) {
+        m_maxElevation = maxElevation;
     }
 
     /**
@@ -417,7 +426,7 @@ public class CalcObject {
                     double tmp[] = { subject[0], subject[1], subject[2], 0.0, 0.0, 0.0 };
                     ok = aerv(tmp, object, aerv);
 
-                    if (range != 0.0 && snr >= minSnr && aerv[1] >= minElevation) {
+                    if (range != 0.0 && snr >= minSnr && aerv[1] >= m_minElevation && aerv[1] <= m_maxElevation) {
 
                         double tropo = TroposphericDelay.getRangeCorrection(getLatitude(), getAltitude(), aerv[1],
                                 ea.getKey());
