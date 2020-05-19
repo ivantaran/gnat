@@ -376,6 +376,9 @@ public class CalcObject {
 
                     double range, snr, ionl, ionp, mp1, mp2;
 
+                    double tmp[] = { subject[0], subject[1], subject[2], 0.0, 0.0, 0.0 };
+                    ok = aerv(tmp, object, aerv);
+
                     if (singleMode.isEmpty()) {
                         double obsP1 = ea.getValue().getOrDefault(m_observationsNames1[0], 0.0);
                         double obsL1 = ea.getValue().getOrDefault(m_observationsNames1[1], 0.0) * GiModel.CVEL
@@ -387,8 +390,15 @@ public class CalcObject {
                         double obsSnr2 = obsP2 > 0.0 ? ea.getValue().getOrDefault(m_observationsNames2[2], 0.0) : 0.0;
                         double f1q = object[NAVMAP_L1] * object[NAVMAP_L1];
                         double f2q = object[NAVMAP_L2] * object[NAVMAP_L2];
-
                         snr = Math.min(obsSnr1, obsSnr2);
+                        
+                        double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 || Math.abs(c2) > 0.0)) {
+                            obsP1 -= c1 * (GiModel.CVEL * 0.001);
+                            obsP2 -= c2 * (GiModel.CVEL * 0.001);
+                        }
+
                         range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                         ionl = obsL1 - obsL2;
                         ionp = obsP2 - obsP1;
@@ -403,28 +413,6 @@ public class CalcObject {
                         mp1 = 0.0;
                         mp2 = 0.0;
                     }
-
-                    // double obsP1 = ea.getValue().getOrDefault("P1", 0.0);
-                    // double obsL1 = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL /
-                    // object[NAVMAP_L1];
-                    // double obsSnr1 = ea.getValue().getOrDefault("S1", 0.0);
-                    // double obsP2 = ea.getValue().getOrDefault("P2", 0.0);
-                    // double obsL2 = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL /
-                    // object[NAVMAP_L2];
-                    // double obsSnr2 = ea.getValue().getOrDefault("S2", 0.0);
-
-                    // if (obsP1 != 0.0) {
-                    // obsP1 += -250.0;
-                    // }
-                    //
-                    // if (obsP2 != 0.0) {
-                    // obsP2 += -270.606;
-                    // }
-
-                    // double snr = obsSnr1;
-                    // double range = obsP1;
-                    double tmp[] = { subject[0], subject[1], subject[2], 0.0, 0.0, 0.0 };
-                    ok = aerv(tmp, object, aerv);
 
                     if (range != 0.0 && snr >= minSnr && aerv[1] >= m_minElevation && aerv[1] <= m_maxElevation) {
 
