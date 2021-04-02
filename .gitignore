@@ -3,3 +3,5 @@
 !src/**
 !pom.xml
 !*.sh
+!.vscode
+!.vscode/*

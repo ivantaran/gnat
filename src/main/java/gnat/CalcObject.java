@@ -392,14 +392,24 @@ public class CalcObject {
                         double f2q = object[NAVMAP_L2] * object[NAVMAP_L2];
                         snr = Math.min(obsSnr1, obsSnr2);
 
+                        double dr = 0.0;
+                        if (m_clockCorrectionRateMs != 0.0) {
+                            dr = (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
+                        }
+                        
+                        obsP1 += dr;
+                        obsP2 += dr;
+                        // obsL1 += dr;
+                        // obsL2 += dr;
+
                         // TODO what is this? Unambiguity.
-                        // double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
-                        // double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
-                        // if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 ||
-                        // Math.abs(c2) > 0.0)) {
-                        // obsP1 -= c1 * (GiModel.CVEL * 0.001);
-                        // obsP2 -= c2 * (GiModel.CVEL * 0.001);
-                        // }
+                        double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 ||
+                        Math.abs(c2) > 0.0)) {
+                            obsP1 -= c1 * (GiModel.CVEL * 0.001);
+                            obsP2 -= c2 * (GiModel.CVEL * 0.001);
+                        }
 
                         range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                         ionl = obsL1 - obsL2;
@@ -427,9 +437,9 @@ public class CalcObject {
                         // range += (double) (ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
                         // range += (double) (ea.getKey() - 1578009600000L) * (121.0 / 86400.0 / 12.0) *
                         // 0.001;
-                        if (m_clockCorrectionRateMs != 0.0) {
-                            range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
-                        }
+                        // if (m_clockCorrectionRateMs != 0.0) {
+                        //     range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
+                        // }
 
                         // Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
