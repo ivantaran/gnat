@@ -1,0 +1,106 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "topcon1",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=30.0",
+                "--minelv=5.0",
+                "--clockcorr=793.0;27.03.2021 00:00:00.0",
+                "~/tmp/topcon/1"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "topcon2",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=-10.0",
+                "--minelv=5.0",
+                "--clockcorr=243.34976;27.03.2021 00:00:00.0",
+                "~/tmp/topcon/2"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "su04",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                // "--filter=", 
+                // "", 
+                "--minsnr=-10.0",
+                "~/tmp/rnx/SU04/1"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "leij",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=30.0",
+                "--filter=_R_2019001",
+                "--clockcorr=31.354050926;01.01.2019 00:00:00.0",
+                "~/tmp/rnx/leij"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "sch1",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=55.0",
+                "--filter=SCH100",
+                // "--letters=5",
+                "~/tmp/rnx/30s/sch1"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "sch2",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=55.0",
+                "--filter=SCH200",
+                // "--posoffset=-80.4491850882769,22.8434664546512,31.8357789134607,186.854862081841",
+                "~/tmp/rnx/sch2"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "sch4",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=55.0",
+                "--filter=SCH400",
+                // "--letters=5",
+                // "--single=C2P",
+                "~/tmp/rnx/30s/sch4"
+            ]
+        },
+        {
+            "type": "java",
+            "name": "sch5",
+            "request": "launch",
+            "mainClass": "gnat.Gnat",
+            "args": [
+                "--minsnr=55.0",
+                "--filter=SCH500",
+                // "--letters=5",
+                // "--single=C1P",
+                "~/tmp/rnx/30s/sch5"
+            ]
+        }
+    ]
+}
