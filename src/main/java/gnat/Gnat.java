@@ -1,6 +1,8 @@
 
 package gnat;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.GregorianCalendar;
@@ -30,6 +32,7 @@ public class Gnat {
     private static final String ARG_POSOFFSET = "--posoffset=";
     private static final String ARG_SINGLE = "--single=";
     private static final String ARG_STEP = "--step=";
+    private static final String ARG_DIRS = "--dirs=";
 
     private static final void printUsage() {
         System.out.println("Usage:\njava -jar Gnat.jar --filter=SUBSTRING /my/path");
@@ -48,6 +51,7 @@ public class Gnat {
         String clockcorr = "";
         String filter = "";
         String letters = "";
+        String dirs = "";
         String obsnames1 = "";
         String obsnames2 = "";
         String output = "";
@@ -79,6 +83,8 @@ public class Gnat {
                     filter = s.replaceFirst(ARG_FILTER, "");
                 } else if (s.contains(ARG_LETTERS)) {
                     letters = s.replaceFirst(ARG_LETTERS, "");
+                } else if (s.contains(ARG_DIRS)) {
+                    dirs = s.replaceFirst(ARG_DIRS, "");
                 } else if (s.contains(ARG_STEP)) {
                     s = s.replaceFirst(ARG_STEP, "");
                     step = Long.valueOf(s);
@@ -115,7 +121,19 @@ public class Gnat {
 
         RinexReader rnx = new RinexReader();
 
-        rnx.openDir(path, filter);
+        File f = new File(path);
+        if (f.exists() && !f.isDirectory()) {
+            rnx.open(path, filter);
+        } else {
+            rnx.openDir(path, filter);
+        }
+
+        if (!dirs.isEmpty()) {
+            String[] list = dirs.split("[ ,;]");
+            for (String dir : list) {
+                rnx.openDir(dir, filter);
+            }
+        }
 
         // if (rnx.observeReader != null) {
         // rnx.observeReader.save();
@@ -207,7 +225,7 @@ public class Gnat {
             co.setPosition(p);
 
             co.addObservesMap(rnx.observeReader.getObjectMap());
-            // co.saveDelta("delta.txt");
+            co.saveDelta("delta.txt");
 
             printMode(co);
             // System.exit(0);

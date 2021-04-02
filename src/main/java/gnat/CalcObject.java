@@ -391,13 +391,6 @@ public class CalcObject {
                         double f1q = object[NAVMAP_L1] * object[NAVMAP_L1];
                         double f2q = object[NAVMAP_L2] * object[NAVMAP_L2];
                         snr = Math.min(obsSnr1, obsSnr2);
-                        
-                        // double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
-                        // double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
-                        // if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 || Math.abs(c2) > 0.0)) {
-                        //     obsP1 -= c1 * (GiModel.CVEL * 0.001);
-                        //     obsP2 -= c2 * (GiModel.CVEL * 0.001);
-                        // }
 
                         range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                         ionl = obsL1 - obsL2;
@@ -420,11 +413,6 @@ public class CalcObject {
                                 ea.getKey());
                         range -= tropo;
 
-                        // range += (double)(ea.getKey() - 1585785600000L) * (20.0 / (86400.0 * 4.0 -
-                        // 2.0 * 3600.0)) * 0.001;
-                        // range += (double) (ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
-                        // range += (double) (ea.getKey() - 1578009600000L) * (121.0 / 86400.0 / 12.0) *
-                        // 0.001;
                         if (m_clockCorrectionRateMs != 0.0) {
                             range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
                         }
