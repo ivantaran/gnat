@@ -45,7 +45,7 @@ public class RinexReader {
 
     public GlonassNavDataReader gnd_tmp;
     public ObserveReader observeReader;
-    private final double[] version_list = { 2.00, 2.01, 2.10, 2.11, 3.02, 3.03 };
+    private final double[] version_list = { 2.00, 2.01, 2.10, 2.11, 3.02, 3.03, 3.04 };
     private final char[] type_list;
     private final char[] system_list;
     private char type = ' ';
@@ -200,7 +200,7 @@ public class RinexReader {
     }
 
     public boolean open(String fileName, String filter) {
-        boolean result = true;
+        boolean result = false;
         boolean eoh = false;
 
         lineIndex = 0;
@@ -208,6 +208,7 @@ public class RinexReader {
         dataLines.clear();
 
         if (!filter.isEmpty() && !fileName.contains(filter)) {
+            setError(ErrorCodes.Success);
             return result;
         }
 
@@ -278,9 +279,14 @@ public class RinexReader {
         try {
             Files.walk(Paths.get(dir)).filter(path -> Files.isRegularFile(path) && Files.isReadable(path))
                     .forEach(path -> {
-                        open(path.toAbsolutePath().toString(), filter);
-                        System.out.println(getErrorMessasge());
+                        if (open(path.toAbsolutePath().toString(), filter)) {
+                            System.out.print(path + "\r");
+                        } else if (getErrorCode() != ErrorCodes.Success) {
+                            System.out.println(path + "\r");
+                            System.out.println(getErrorMessasge());
+                        }
                     });
+            System.out.println();
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }

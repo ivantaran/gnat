@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import rinex.GlonassNavData;
 import rinex.ObserveObject;
@@ -22,7 +21,7 @@ import rinex.ObserveObject;
 public class CalcObject {
 
     private final static int MAX_POINTS = 0x7FFFFFFF;
-    private final static int DELTA_WIDTH = 12;
+    private final static int DELTA_WIDTH = 13;
     private final static int DELTA_DX = 0;
     private final static int DELTA_DY = 1;
     private final static int DELTA_DZ = 2;
@@ -34,7 +33,8 @@ public class CalcObject {
     private final static int DELTA_IONL = 8;
     private final static int DELTA_AZM = 9;
     private final static int DELTA_ELV = 10;
-    private final static int DELTA_LETTER = 11;
+    private final static int DELTA_VELOCITY = 11;
+    private final static int DELTA_LETTER = 12;
 
     private final static int NAVMAP_WIDTH = 11;
     private final static int NAVMAP_X = 0;
@@ -55,7 +55,11 @@ public class CalcObject {
     private long startTime = -900000;
     private long endTime = 900000;
     private double minSnr = 45.0;
-    private double minElevation = Math.toRadians(10.0);
+    private double m_minElevation = Math.toRadians(10.0);
+    private double m_maxElevation = Math.toRadians(90.0);
+    private double m_clockCorrectionRateMs = 0.0;
+    private double m_medianFilterThreshold = 6.0;
+    private long m_clockCorrectionBaseTimeMs = 0;
     private String singleMode = "";
     private final String m_observationsNames1[] = { "C1P", "L1P", "S1P" };
     private final String m_observationsNames2[] = { "C2P", "L2P", "S2P" };
@@ -73,6 +77,15 @@ public class CalcObject {
 
     }
 
+    public final void setMedianFilterThreshold(double threshold) {
+        m_medianFilterThreshold = threshold;
+    }
+
+    public final void setClockCorrection(double rateMetersInMillis, long baseTimeInMillis) {
+        m_clockCorrectionRateMs = rateMetersInMillis;
+        m_clockCorrectionBaseTimeMs = baseTimeInMillis;
+    }
+
     public final void setPosition(double[] position) {
         System.arraycopy(position, 0, m_position, 0, Math.min(position.length, m_position.length));
         NavUtils.ecefToLatLonAlt(m_position, m_latLonAlt);
@@ -82,7 +95,7 @@ public class CalcObject {
         System.arraycopy(positionOffset, 0, m_positionOffset, 0,
                 Math.min(positionOffset.length, m_positionOffset.length));
     }
-    
+
     public void setLetters(HashSet<Integer> letters) {
         m_letters.clear();
         m_letters.addAll(letters);
@@ -136,14 +149,22 @@ public class CalcObject {
      * @return the minElevation
      */
     public double getMinElevation() {
-        return minElevation;
+        return m_minElevation;
+    }
+
+    public double getMaxElevation() {
+        return m_maxElevation;
     }
 
     /**
      * @param minElevation the minElevation to set
      */
     public void setMinElevation(double minElevation) {
-        this.minElevation = minElevation;
+        m_minElevation = minElevation;
+    }
+
+    public void setMaxElevation(double maxElevation) {
+        m_maxElevation = maxElevation;
     }
 
     /**
@@ -311,7 +332,7 @@ public class CalcObject {
 
     private void updateObserves(double[] subject) {
         int objectName;
-        double[] aerv = new double[3];
+        double[] aerv = new double[4];
         boolean ok;
 
         delta.clear();
@@ -348,12 +369,15 @@ public class CalcObject {
                     if (object == null) {
                         continue;
                     }
-                    
-                    if (m_letters.size() > 0 && !m_letters.contains((int)object[NAVMAP_LETTER])) {
+
+                    if (m_letters.size() > 0 && !m_letters.contains((int) object[NAVMAP_LETTER])) {
                         continue;
                     }
 
                     double range, snr, ionl, ionp, mp1, mp2;
+
+                    double tmp[] = { subject[0], subject[1], subject[2], 0.0, 0.0, 0.0 };
+                    ok = aerv(tmp, object, aerv);
 
                     if (singleMode.isEmpty()) {
                         double obsP1 = ea.getValue().getOrDefault(m_observationsNames1[0], 0.0);
@@ -366,8 +390,15 @@ public class CalcObject {
                         double obsSnr2 = obsP2 > 0.0 ? ea.getValue().getOrDefault(m_observationsNames2[2], 0.0) : 0.0;
                         double f1q = object[NAVMAP_L1] * object[NAVMAP_L1];
                         double f2q = object[NAVMAP_L2] * object[NAVMAP_L2];
-
                         snr = Math.min(obsSnr1, obsSnr2);
+                        
+                        double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 || Math.abs(c2) > 0.0)) {
+                            obsP1 -= c1 * (GiModel.CVEL * 0.001);
+                            obsP2 -= c2 * (GiModel.CVEL * 0.001);
+                        }
+
                         range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                         ionl = obsL1 - obsL2;
                         ionp = obsP2 - obsP1;
@@ -383,33 +414,20 @@ public class CalcObject {
                         mp2 = 0.0;
                     }
 
-                    // double obsP1 = ea.getValue().getOrDefault("P1", 0.0);
-                    // double obsL1 = ea.getValue().getOrDefault("L1", 0.0) * GiModel.CVEL /
-                    // object[NAVMAP_L1];
-                    // double obsSnr1 = ea.getValue().getOrDefault("S1", 0.0);
-                    // double obsP2 = ea.getValue().getOrDefault("P2", 0.0);
-                    // double obsL2 = ea.getValue().getOrDefault("L2", 0.0) * GiModel.CVEL /
-                    // object[NAVMAP_L2];
-                    // double obsSnr2 = ea.getValue().getOrDefault("S2", 0.0);
-
-                    // if (obsP1 != 0.0) {
-                    // obsP1 += -250.0;
-                    // }
-                    //
-                    // if (obsP2 != 0.0) {
-                    // obsP2 += -270.606;
-                    // }
-
-                    // double snr = obsSnr1;
-                    // double range = obsP1;
-
-                    ok = aerv(subject, object, aerv);
-
-                    if (range != 0.0 && snr >= minSnr && aerv[1] >= minElevation) {
+                    if (range != 0.0 && snr >= minSnr && aerv[1] >= m_minElevation && aerv[1] <= m_maxElevation) {
 
                         double tropo = TroposphericDelay.getRangeCorrection(getLatitude(), getAltitude(), aerv[1],
                                 ea.getKey());
                         range -= tropo;
+
+                        // range += (double)(ea.getKey() - 1585785600000L) * (20.0 / (86400.0 * 4.0 -
+                        // 2.0 * 3600.0)) * 0.001;
+                        // range += (double) (ea.getKey() - 1586736000000L) * (7.6 / 86400.0) * 0.001;
+                        // range += (double) (ea.getKey() - 1578009600000L) * (121.0 / 86400.0 / 12.0) *
+                        // 0.001;
+                        if (m_clockCorrectionRateMs != 0.0) {
+                            range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
+                        }
 
                         // Sagnac
                         double theta = -(range + object[NAVMAP_T]) * GiModel.WE / GiModel.CVEL;
@@ -433,6 +451,7 @@ public class CalcObject {
                         deltaValues[DELTA_IONL] = ionl;
                         deltaValues[DELTA_AZM] = aerv[0];
                         deltaValues[DELTA_ELV] = aerv[1];
+                        deltaValues[DELTA_VELOCITY] = aerv[3];
                         deltaValues[DELTA_LETTER] = object[NAVMAP_LETTER];
 
                         deltaRecord.put(ea.getKey(), deltaValues);
@@ -477,7 +496,7 @@ public class CalcObject {
         });
 
         double mad = median(listResiduals);
-        double level = mad * 6.0;
+        double level = mad * m_medianFilterThreshold;
 
         delta.entrySet().forEach(tm -> {
             tm.getValue().entrySet().removeIf(values -> (Math.abs(values.getValue()[DELTA_DR] - med) > level));
@@ -495,7 +514,7 @@ public class CalcObject {
     public boolean aerv(double[] subject, double[] object, double[] aerv) {
         double[][] m = new double[3][3];
         double[] d = new double[3];
-        double[] dlt = new double[Math.min(Math.min(subject.length, object.length), aerv.length)];
+        double[] dlt = new double[Math.min(subject.length, object.length)];
         double p = Math.sqrt(subject[0] * subject[0] + subject[1] * subject[1]);
         double r = Math.sqrt(subject[0] * subject[0] + subject[1] * subject[1] + subject[2] * subject[2]);
 
@@ -528,23 +547,13 @@ public class CalcObject {
         double s = d[2] / Math.sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
 
         aerv[1] = (s == 1.0) ? 0.5 * Math.PI : Math.atan(s / Math.sqrt(1.0 - s * s));
+        aerv[0] = Math.atan2(d[0], d[1]);
 
-        if (d[1] == 0.0) {
-            aerv[0] = (d[0] > 0.0) ? 0.5 * Math.PI : 1.5 * Math.PI;
-            return true;
+        if (aerv[0] < 0.0) {
+            aerv[0] += 2.0 * Math.PI;
         }
 
-        aerv[0] = Math.atan(d[0] / d[1]);
-
-        if (d[1] < 0.0) {
-            aerv[0] += Math.PI;
-        } else {
-            if (d[0] < 0.0) {
-                aerv[0] += 2.0 * Math.PI;
-            }
-        }
-
-        if (dlt.length >= 6) {
+        if (aerv.length >= 4 && dlt.length >= 6) {
             aerv[3] = (dlt[0] * dlt[3] + dlt[1] * dlt[4] + dlt[2] * dlt[5]) / aerv[2];
         }
 
@@ -615,10 +624,10 @@ public class CalcObject {
                 for (Map.Entry<Long, double[]> entry : tm.getValue().entrySet()) {
 
                     String line = String.format(Locale.ROOT,
-                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%d\n", tm.getKey(),
+                            "%d\t%d\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%.12e\t%d\n", tm.getKey(),
                             entry.getKey(), entry.getValue()[DELTA_DR], entry.getValue()[DELTA_MP1],
                             entry.getValue()[DELTA_MP2], entry.getValue()[DELTA_IONP], entry.getValue()[DELTA_IONL],
-                            entry.getValue()[DELTA_AZM], entry.getValue()[DELTA_ELV],
+                            entry.getValue()[DELTA_AZM], entry.getValue()[DELTA_ELV], entry.getValue()[DELTA_VELOCITY],
                             (int) entry.getValue()[DELTA_LETTER]);
                     bw.write(line);
                 }
@@ -640,7 +649,7 @@ public class CalcObject {
         double value;
         int c = 0;
 
-        updateNavData(subject);
+        updateNavData(subject); // TODO: make subject as 7d vector xvt
         updateObserves(subject);
 
         for (HashMap.Entry<Integer, TreeMap<Long, double[]>> tm : delta.entrySet()) {

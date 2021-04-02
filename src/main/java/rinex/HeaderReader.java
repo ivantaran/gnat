@@ -37,7 +37,7 @@ public class HeaderReader {
     private ArrayList<String> sys_phase_shift = null;
     private ArrayList<String> glonass_slot_frq = null;
     private ArrayList<String> glonass_cod_phs_bis = null;
-    private int leap_seconds = 0; // TODO !!!
+    private int leap_seconds = 18; // TODO !!!
 
     private ArrayList<String> headLines;
     private int lineIndex = 0;

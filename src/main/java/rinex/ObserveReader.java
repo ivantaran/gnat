@@ -190,11 +190,12 @@ public class ObserveReader {
             if (flag == FLAG_HEADER || flag == FLAG_EXTEVENT) {
                 warning(String.format("flag at line: %d", getLineIndex()));
                 warning(line);
-                int c = Integer.parseInt(line.substring(29, 32).trim());
+                int c = getObjectCount(line);
                 while (c > 0) {
                     getLine();
                     c--;
                 }
+                count = 0;
             } else {
                 warning(String.format("flag %d at line: %d", flag, getLineIndex()));
                 warning(line);

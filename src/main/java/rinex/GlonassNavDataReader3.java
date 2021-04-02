@@ -27,8 +27,15 @@ public class GlonassNavDataReader3 extends GlonassNavDataReader {
         char navDataMarker = line.charAt(0);
         if (navDataMarker != 'R') {
             switch (navDataMarker) {
+                case 'E':
+                case 'C':
                 case 'G':
                     for (int i = 0; i < 7; i++) {
+                        getLine();
+                    }
+                    break;
+                case 'S':
+                    for (int i = 0; i < 3; i++) {
                         getLine();
                     }
                     break;
