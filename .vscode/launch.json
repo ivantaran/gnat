@@ -14,7 +14,8 @@
                 "--clockcorr=793.0264244,27.03.2021 00:00:00.000",
                 "--minsnr=30.0",
                 "--minelv=5.0",
-                "~/tmp/topcon/1"
+                "--dirs=/home/taran/tmp/topcon/c1/nav",
+                "/home/taran/tmp/topcon/c1/21086/21o/B125_CON_5_2_7_STATIC00RUS_R_20210861200_01H_30S_MO.rnx"
             ]
         },
         {
