@@ -11,11 +11,12 @@
             "mainClass": "gnat.Gnat",
             "projectName": "gnat",
             "args": [
-                "--clockcorr=793.0264244,27.03.2021 00:00:00.000",
+                "--clockcorr=792.4;27.03.2021 00:00:00.000",
                 "--minsnr=30.0",
                 "--minelv=5.0",
+                // "--mfthreshold=7.0",
                 "--dirs=/home/taran/tmp/topcon/c1/nav",
-                "/home/taran/tmp/topcon/c1/21086/21o/B125_CON_5_2_7_STATIC00RUS_R_20210861200_01H_30S_MO.rnx"
+                "/home/taran/tmp/topcon/c1/21086/21o/B125_CON_5_2_7_STATIC00RUS_R_20210861218_03M_01S_RO.rnx"
             ]
         },
         {
@@ -26,12 +27,10 @@
             "projectName": "gnat",
             "args": [
                 "--clockcorr=793.0264244,27.03.2021 00:00:00.000",
-                // "--clockcorr=732.0;27.03.2021 00:00:00.000",
-                // "--single=C1P",
                 "--minsnr=30.0",
-                "--minelv=5.0",
-                "--dirs=/home/user/tmp/topcon/tmp/c1/nav",
-                "~/tmp/topcon/tmp/c1/21086/21o/B125_CON_5_2_7_STATIC00RUS_R_20210861200_01H_30S_MO.rnx"
+                "--minelv=0.0",
+                "--dirs=/home/taran/tmp/topcon/c1/nav",
+                "/home/taran/tmp/topcon/c1/1d"
             ]
         },
         {
@@ -43,8 +42,9 @@
             "args": [
                 "--clockcorr=243.29335058;27.03.2021 00:00:00.000",
                 "--minsnr=30.0",
-                "--minelv=5.0",
-                "~/tmp/topcon/2"
+                "--minelv=0.0",
+                "--dirs=/home/taran/tmp/topcon/c2/nav",
+                "/home/taran/tmp/topcon/c2/1d"
             ]
         }
     ]

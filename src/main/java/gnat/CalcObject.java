@@ -344,9 +344,6 @@ public class CalcObject {
 
             try {
                 objectName = Integer.parseInt(obsObject.getKey().replaceAll("^\\D", "").trim());
-                // if (objectName == 12 || objectName == 1 || objectName == 10 || objectName ==
-                // 11 || objectName == 26 || objectName == 14 || objectName == 15 || objectName
-                // == 2) continue;
             } catch (NumberFormatException e) {
                 System.out.println(e.getMessage());
                 System.out.println(obsObject.getKey());
@@ -392,11 +389,28 @@ public class CalcObject {
                         double f2q = object[NAVMAP_L2] * object[NAVMAP_L2];
                         snr = Math.min(obsSnr1, obsSnr2);
 
-                        range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
                         ionl = obsL1 - obsL2;
                         ionp = obsP2 - obsP1;
                         mp1 = obsP1 - obsL1 + 2.0 * ionl * f2q / (f2q - f1q);
                         mp2 = obsP2 - obsL2 + 2.0 * ionl * f1q / (f2q - f1q);
+
+                        // if (m_clockCorrectionRateMs != 0.0) {
+                        // obsP1 += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) *
+                        // m_clockCorrectionRateMs;
+                        // obsP2 += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) *
+                        // m_clockCorrectionRateMs;
+                        // }
+
+                        // double c1 = Math.round((obsP1 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        // double c2 = Math.round((obsP2 - aerv[2]) / (GiModel.CVEL * 0.001));
+                        // if (snr != 0.0 && obsP1 != 0.0 && obsP2 != 0.0 && (Math.abs(c1) > 0.0 ||
+                        // Math.abs(c2) > 0.0)) {
+                        // obsP1 -= c1 * (GiModel.CVEL * 0.001);
+                        // obsP2 -= c2 * (GiModel.CVEL * 0.001);
+                        // }
+
+                        range = (obsP1 * f1q - obsP2 * f2q) / (f1q - f2q);
+
                     } else {
                         range = ea.getValue().getOrDefault(singleMode, 0.0);
                         String snrType = 'S' + singleMode.substring(1, singleMode.length());
@@ -415,9 +429,13 @@ public class CalcObject {
 
                         if (m_clockCorrectionRateMs != 0.0) {
                             range += (double) (ea.getKey() - m_clockCorrectionBaseTimeMs) * m_clockCorrectionRateMs;
+                            // double qdt = (double) (ea.getKey() - m_clockCorrectionBaseTimeMs);
+                            // range -= qdt * qdt * (-7.95802745e-10);
+                            // range -= qdt * (7.05725295e-02);
+                            // range -= (-1.56460718e+06);
                         }
 
-                        double c = Math.round((range - aerv[2]) / (GiModel.CVEL * 0.001));
+                        double c = Math.round((range - aerv[2] + object[NAVMAP_T]) / (GiModel.CVEL * 0.001));
                         if (Math.abs(c) > 0.0) {
                             range -= c * (GiModel.CVEL * 0.001);
                         }
