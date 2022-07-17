@@ -21,9 +21,9 @@ public class GlonassNavData {
 
     public static final double FREQUENCY_L1_STEP = 0.5625e6;
     public static final double FREQUENCY_L2_STEP = 0.4375e6;
-    
+
     private static final double LIGHT_SPEED = 299792458.0;
-    
+
     private int number;
     private GregorianCalendar time;
     private double timeOffset;
@@ -34,11 +34,12 @@ public class GlonassNavData {
     private double[] acceleration = new double[3];
     private int frequencyChannelNumber;
     private double age;
+    private double dtau = 0.0;
 
     public double getFrequencyL1() {
         return FREQUENCY_L1 + FREQUENCY_L1_STEP * frequencyChannelNumber;
     }
-    
+
     public double getFrequencyL2() {
         return FREQUENCY_L2 + FREQUENCY_L2_STEP * frequencyChannelNumber;
     }
@@ -46,19 +47,19 @@ public class GlonassNavData {
     public double getFrequencyL3() {
         return FREQUENCY_L3;
     }
-        
+
     public double getWaveLengthL1() {
         return LIGHT_SPEED / getFrequencyL1();
     }
-    
+
     public double getWaveLengthL2() {
         return LIGHT_SPEED / getFrequencyL2();
     }
-    
+
     public double getWaveLengthL3() {
         return LIGHT_SPEED / getFrequencyL2();
     }
-    
+
     /**
      * @return the number
      */
@@ -198,15 +199,29 @@ public class GlonassNavData {
     public void setAge(double age) {
         this.age = age;
     }
-    
+
+    /**
+     * @return the dtau
+     */
+    public double getDtau() {
+        return dtau;
+    }
+
+    /**
+     * @param dtau the dtau to set
+     */
+    public void setDtau(double dtau) {
+        this.dtau = dtau;
+    }
+
     public String getTimeLine() {
         String value;
         SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
         sdf.setCalendar(time);
         value = sdf.format(time.getTimeInMillis());
         return value;
-}
-    
+    }
+
     public void save(String fileName, boolean append) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName, append))) {
             bw.write(String.format("number                 %24d\n", number));
@@ -217,6 +232,7 @@ public class GlonassNavData {
             bw.write(String.format("suitability            %24b\n", suitability));
             bw.write(String.format("frequencyChannelNumber %24d\n", frequencyChannelNumber));
             bw.write(String.format("age                    %24f\n", age));
+            bw.write(String.format("dtau                   %24f\n", dtau));
 
             for (int i = 0; i < state.length; i++) {
                 bw.write(String.format("state[%d]               %24f\n", i, state[i]));

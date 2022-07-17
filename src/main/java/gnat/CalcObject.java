@@ -36,7 +36,7 @@ public class CalcObject {
     private final static int DELTA_VELOCITY = 11;
     private final static int DELTA_LETTER = 12;
 
-    private final static int NAVMAP_WIDTH = 11;
+    private final static int NAVMAP_WIDTH = 12;
     private final static int NAVMAP_X = 0;
     private final static int NAVMAP_Y = 1;
     private final static int NAVMAP_Z = 2;
@@ -48,6 +48,7 @@ public class CalcObject {
     private final static int NAVMAP_L2 = 8;
     private final static int NAVMAP_L3 = 9;
     private final static int NAVMAP_LETTER = 10;
+    private final static int NAVMAP_DTAU = 11;
 
     private final ArrayList<GlonassNavData> navDataList = new ArrayList();
 
@@ -298,6 +299,7 @@ public class CalcObject {
         result[NAVMAP_L2] = navData.getFrequencyL2() * navData.getFrequencyOffset() + navData.getFrequencyL2();
         result[NAVMAP_L3] = navData.getFrequencyL3() * navData.getFrequencyOffset() + navData.getFrequencyL3();
         result[NAVMAP_LETTER] = navData.getFrequencyChannelNumber();
+        result[NAVMAP_DTAU] = navData.getDtau();
 
         return result;
     }
@@ -382,6 +384,7 @@ public class CalcObject {
                                 / object[NAVMAP_L1];
                         double obsSnr1 = obsP1 > 0.0 ? ea.getValue().getOrDefault(m_observationsNames1[2], 0.0) : 0.0;
                         double obsP2 = ea.getValue().getOrDefault(m_observationsNames2[0], 0.0);
+                        obsP2 -= object[NAVMAP_DTAU];
                         double obsL2 = ea.getValue().getOrDefault(m_observationsNames2[1], 0.0) * GiModel.CVEL
                                 / object[NAVMAP_L2];
                         double obsSnr2 = obsP2 > 0.0 ? ea.getValue().getOrDefault(m_observationsNames2[2], 0.0) : 0.0;

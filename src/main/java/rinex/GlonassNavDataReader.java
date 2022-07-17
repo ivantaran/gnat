@@ -6,6 +6,9 @@ package rinex;
 
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+
+import gnat.GiModel;
 
 /**
  *
@@ -13,18 +16,26 @@ import java.util.GregorianCalendar;
  */
 public class GlonassNavDataReader {
     private ArrayList<String> dataLines;
+    private ArrayList<String> headLines;
     private int lineIndex = 0;
-    protected ArrayList<GlonassNavData> navDataList = new ArrayList();
-    
-    GlonassNavDataReader(ArrayList<String> dataLines) {
+    protected ArrayList<GlonassNavData> navDataList = new ArrayList<>();
+    protected HashMap<Integer, Double> dtau = new HashMap<>();
+
+    GlonassNavDataReader(ArrayList<String> headLines, ArrayList<String> dataLines) {
+        addHeader(headLines);
         add(dataLines);
     }
-    
+
+    public final void addHeader(ArrayList<String> headLines) {
+        this.headLines = headLines;
+        parseHeader();
+    }
+
     public final void add(ArrayList<String> dataLines) {
         this.dataLines = dataLines;
         parse();
     }
-    
+
     private GregorianCalendar getTime(String line) {
         GregorianCalendar c = new GregorianCalendar();
         try {
@@ -35,30 +46,29 @@ public class GlonassNavDataReader {
             int hour = Integer.parseInt(line.substring(9, 11).trim());
             int minute = Integer.parseInt(line.substring(12, 14).trim());
             double fracSecond = Double.parseDouble(line.substring(14, 19).trim());
-            int second = (int)fracSecond;
+            int second = (int) fracSecond;
             fracSecond -= second;
             c.setTimeInMillis(0);
             c.set(year, month, day, hour, minute, second);
-            c.setTimeInMillis(c.getTimeInMillis() + (long)(fracSecond * 1000));
-//            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
-//            sdf.setCalendar(c);
-//            warning(sdf.format(c.getTimeInMillis()));
-        }
-        catch (NumberFormatException e) {
+            c.setTimeInMillis(c.getTimeInMillis() + (long) (fracSecond * 1000));
+            // SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSS");
+            // sdf.setCalendar(c);
+            // warning(sdf.format(c.getTimeInMillis()));
+        } catch (NumberFormatException e) {
             warning(String.format("NumberFormatException at header line %d", getLineIndex()));
             warning(line);
             warning(e.getMessage());
         }
         return c;
     }
-    
+
     protected void parseNavData() {
         String line;
         double value;
         double[] state = new double[6];
         double[] acceleration = new double[3];
         GlonassNavData gnd = new GlonassNavData();
-        
+
         /* line 1 */
         line = getLine();
         line = line.replace('D', 'E');
@@ -67,7 +77,7 @@ public class GlonassNavDataReader {
         gnd.setTimeOffset(Double.parseDouble(line.substring(22, 41).trim()));
         gnd.setFrequencyOffset(Double.parseDouble(line.substring(41, 60).trim()));
         gnd.setMessageTime(Double.parseDouble(line.substring(60, 79).trim()));
-        
+
         /* line 2 */
         line = getLine();
         line = line.replace('D', 'E');
@@ -76,7 +86,7 @@ public class GlonassNavDataReader {
         acceleration[0] = Double.parseDouble(line.substring(41, 60).trim());
         value = Double.parseDouble(line.substring(60, 79).trim());
         gnd.setSuitability(value == 0);
-        
+
         /* line 3 */
         line = getLine();
         line = line.replace('D', 'E');
@@ -84,8 +94,8 @@ public class GlonassNavDataReader {
         state[4] = Double.parseDouble(line.substring(22, 41).trim());
         acceleration[1] = Double.parseDouble(line.substring(41, 60).trim());
         value = Double.parseDouble(line.substring(60, 79).trim());
-        gnd.setFrequencyChannelNumber((int)value);
-        
+        gnd.setFrequencyChannelNumber((int) value);
+
         /* line 4 */
         line = getLine();
         line = line.replace('D', 'E');
@@ -94,28 +104,41 @@ public class GlonassNavDataReader {
         acceleration[2] = Double.parseDouble(line.substring(41, 60).trim());
         gnd.setAge(Double.parseDouble(line.substring(60, 79).trim()));
         /*        */
-        
+
         for (int i = 0; i < state.length; i++) {
             state[i] *= 1000;
         }
-        
+
         for (int i = 0; i < acceleration.length; i++) {
             acceleration[i] *= 1000;
         }
-        
+
         gnd.setState(state);
         gnd.setAcceleration(acceleration);
-        
+
         navDataList.add(gnd);
     }
-    
+
     private void parse() {
         lineIndex = 0;
         while (linesReady()) {
             parseNavData();
         }
     }
-    
+
+    protected void parseHeader() {
+        for (String line : this.headLines) {
+            if (line.indexOf(RinexReader.MARKER_COMMENT, RinexReader.MARKER_LINE_INDEX) > -1) {
+                String[] list = line.split("[ ]+");
+                if (list.length > 6 && list[1].equals("DTAU")) {
+                    int number = Integer.parseInt(line.substring(1, 3).trim());
+                    double value = Double.valueOf(list[3]) * GiModel.CVEL;
+                    dtau.put(number, value);
+                }
+            }
+        }
+    }
+
     protected String getLine() {
         String line = "";
         if (getLineIndex() < dataLines.size()) {
@@ -124,7 +147,7 @@ public class GlonassNavDataReader {
         }
         return line;
     }
-    
+
     private boolean linesReady() {
         return (getLineIndex() < dataLines.size());
     }
@@ -154,4 +177,3 @@ public class GlonassNavDataReader {
     }
 
 }
-

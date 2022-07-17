@@ -310,15 +310,17 @@ public class RinexReader {
                 break;
             case 'G':
                 if (gnd_tmp == null) {
-                    gnd_tmp = new GlonassNavDataReader(dataLines);
+                    gnd_tmp = new GlonassNavDataReader(headLines, dataLines);
                 } else {
+                    gnd_tmp.addHeader(headLines);
                     gnd_tmp.add(dataLines);
                 }
                 break;
             case 'N':
                 if (gnd_tmp == null) {
-                    gnd_tmp = new GlonassNavDataReader3(dataLines);
+                    gnd_tmp = new GlonassNavDataReader3(headLines, dataLines);
                 } else {
+                    gnd_tmp.addHeader(headLines);
                     gnd_tmp.add(dataLines);
                 }
                 break;

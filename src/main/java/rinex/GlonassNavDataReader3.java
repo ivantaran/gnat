@@ -3,6 +3,7 @@ package rinex;
 
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import gnat.GiModel;
 
 /**
  *
@@ -10,8 +11,8 @@ import java.util.GregorianCalendar;
  */
 public class GlonassNavDataReader3 extends GlonassNavDataReader {
 
-    GlonassNavDataReader3(ArrayList<String> dataLines) {
-        super(dataLines);
+    GlonassNavDataReader3(ArrayList<String> headLines, ArrayList<String> dataLines) {
+        super(headLines, dataLines);
     }
 
     @Override
@@ -90,6 +91,7 @@ public class GlonassNavDataReader3 extends GlonassNavDataReader {
 
         gnd.setState(state);
         gnd.setAcceleration(acceleration);
+        gnd.setDtau(dtau.getOrDefault(gnd.getNumber(), 0.0));
 
         navDataList.add(gnd);
     }

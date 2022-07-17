@@ -6,17 +6,19 @@
     "configurations": [
         {
             "type": "java",
-            "name": "tc",
+            "name": "sch",
             "request": "launch",
             "mainClass": "gnat.Gnat",
             "projectName": "gnat",
             "args": [
-                "--clockcorr=792.4;27.03.2021 00:00:00.000",
-                "--minsnr=30.0",
-                "--minelv=5.0",
+                // "--clockcorr=792.4;27.03.2021 00:00:00.000",
+                "--minsnr=40.0",
+                "--minelv=15.0",
                 // "--mfthreshold=7.0",
-                "--dirs=/home/taran/tmp/topcon/c1/nav",
-                "/home/taran/tmp/topcon/c1/21086/21o/B125_CON_5_2_7_STATIC00RUS_R_20210861218_03M_01S_RO.rnx"
+                "--output=/home/taran/tmp/bami2022.16/nav/residuals3.txt",
+                "--filter=SCH301",
+                "--dirs=/home/taran/tmp/bami2022.16/nav/SCH3;/home/taran/tmp/bami2022.16/3/22166/22o"
+                // "/home/taran/tmp/bami2022.16/3/22166/22o"
             ]
         },
         {
